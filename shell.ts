@@ -183,7 +183,9 @@ export class Shell {
             if (["ls", "cat", "cd", "mkdir", "rm"].includes(cmdName)) {
                 const partialPath = args.at(-1) || "";
                 const isTrailingSlash = partialPath.endsWith("/");
-                const dir = isTrailingSlash ? partialPath : path.dirname(partialPath);
+                const dir = isTrailingSlash
+                    ? partialPath
+                    : path.dirname(partialPath);
                 const base = partialPath
                     ? isTrailingSlash
                         ? ""
@@ -192,7 +194,11 @@ export class Shell {
 
                 const searchDir = path.resolve(
                     process.cwd(),
-                    dir === "." && !partialPath.includes("/") && partialPath !== "." ? "." : dir
+                    dir === "." &&
+                        !partialPath.includes("/") &&
+                        partialPath !== "."
+                        ? "."
+                        : dir
                 );
 
                 const files = await fs.promises.readdir(searchDir);
@@ -201,20 +207,17 @@ export class Shell {
                     // Logic to find common prefix relative to base
                     // We need to pass matches and the current partial segment to applyCompletion logic
                     // But applyCompletion logic needs to check common prefix of matches.
-                    const commonPrefix = matches.reduce(
-                        (prefix, current) => {
-                            let i = 0;
-                            while (
-                                i < prefix.length &&
-                                i < current.length &&
-                                prefix[i] === current[i]
-                            ) {
-                                i++;
-                            }
-                            return prefix.substring(0, i);
-                        },
-                        matches[0]
-                    );
+                    const commonPrefix = matches.reduce((prefix, current) => {
+                        let i = 0;
+                        while (
+                            i < prefix.length &&
+                            i < current.length &&
+                            prefix[i] === current[i]
+                        ) {
+                            i++;
+                        }
+                        return prefix.substring(0, i);
+                    }, matches[0]);
 
                     if (matches.length === 1) {
                         const match = matches[0];
@@ -222,19 +225,18 @@ export class Shell {
                         try {
                             const stats = await fs.promises.stat(matchPath);
                             if (stats.isDirectory()) {
-                                const completion = match.substring(base.length) + "/";
+                                const completion =
+                                    match.substring(base.length) + "/";
                                 this.command += completion;
                                 this.cursorPos += completion.length;
                                 this.terminal.write(completion);
                                 return;
                             }
-                        } catch { }
+                        } catch {}
                     }
 
                     if (commonPrefix.length > base.length && base.length > 0) {
-                        const completion = commonPrefix.substring(
-                            base.length
-                        );
+                        const completion = commonPrefix.substring(base.length);
                         this.command += completion;
                         this.cursorPos += completion.length;
                         this.terminal.write(completion);
