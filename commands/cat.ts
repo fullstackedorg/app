@@ -1,4 +1,3 @@
-
 import { Command } from "./types";
 import { Shell } from "../shell";
 import fs from "fs";
@@ -14,9 +13,9 @@ export const cat: Command = {
         }
         try {
             const data = await fs.promises.readFile(file, "utf8");
-            shell.write(data.replace(/\n/g, '\r\n'));
+            shell.write(data.replace(/\n/g, "\r\n"));
         } catch (e: any) {
             shell.writeln(e.message);
         }
     }
-}
+};

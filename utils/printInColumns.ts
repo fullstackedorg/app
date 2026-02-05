@@ -1,22 +1,21 @@
-
 import { Terminal } from "@xterm/xterm";
 
 export function printInColumns(terminal: Terminal, items: string[]) {
     if (items.length === 0) return;
-    const maxLen = Math.max(...items.map(i => i.length));
+    const maxLen = Math.max(...items.map((i) => i.length));
     const colWidth = maxLen + 2; // padding
     const cols = Math.floor(terminal.cols / colWidth) || 1;
 
-    let output = '';
+    let output = "";
     for (let i = 0; i < items.length; i++) {
         output += items[i].padEnd(colWidth);
         if ((i + 1) % cols === 0 && i !== items.length - 1) {
-            output += '\r\n';
+            output += "\r\n";
         }
     }
     terminal.write(output);
     if (items.length > 0 && output.length > 0) {
-        // Check if we need a newline. 
+        // Check if we need a newline.
         // If we just wrote output, the cursor is at the end of the last item.
         // We definitely want a newline after the listing.
         // But wait, if we write \r\n, cursorX becomes 0.
@@ -42,6 +41,6 @@ export function printInColumns(terminal: Terminal, items: string[]) {
         // If I add `\r\n` in `printInColumns`, then `cursorX` becomes 0. `prompt` sees 0, prints prompt.
         // Result: Files... \n Prompt. This is desired.
 
-        terminal.write('\r\n');
+        terminal.write("\r\n");
     }
 }

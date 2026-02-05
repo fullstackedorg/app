@@ -1,4 +1,3 @@
-
 import { Command } from "./types";
 import { Shell } from "../shell";
 
@@ -7,4 +6,4 @@ export const clear: Command = {
     execute: (args: string[], shell: Shell) => {
         shell.clear();
     }
-}
+};

@@ -1,4 +1,3 @@
-
 import { Command } from "./types";
 import { ls } from "./ls";
 import { cat } from "./cat";

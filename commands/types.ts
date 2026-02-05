@@ -1,4 +1,3 @@
-
 import { Shell } from "../shell";
 
 export interface Command {

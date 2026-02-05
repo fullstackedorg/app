@@ -1,4 +1,3 @@
-
 import { Command } from "./types";
 import { Shell } from "../shell";
 import path from "path";
@@ -34,4 +33,4 @@ export const mkdir: Command = {
             }
         }
     }
-}
+};

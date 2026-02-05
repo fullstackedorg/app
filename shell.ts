@@ -1,4 +1,3 @@
-
 import { Terminal } from "@xterm/xterm";
 import { commands } from "./commands";
 import path from "path";
@@ -7,7 +6,7 @@ import fs from "fs";
 
 export class Shell {
     terminal: Terminal;
-    command: string = '';
+    command: string = "";
     cursorPos: number = 0;
     history: string[] = [];
     historyIndex: number = 0;
@@ -18,7 +17,7 @@ export class Shell {
 
     prompt() {
         if (this.terminal.buffer.active.cursorX > 0) {
-            this.terminal.write('\r\n');
+            this.terminal.write("\r\n");
         }
         this.terminal.write(`${process.cwd()} $ `);
     }
@@ -37,7 +36,7 @@ export class Shell {
 
     redrawInput() {
         const promptStr = `${process.cwd()} $ `;
-        this.terminal.write('\r' + promptStr + this.command + '\x1b[K');
+        this.terminal.write("\r" + promptStr + this.command + "\x1b[K");
 
         // Fix cursor position visual update
         // We write the whole command, cursor is effectively at the end.
@@ -50,31 +49,33 @@ export class Shell {
 
     handleInput(e: string) {
         switch (e) {
-            case '\r': // Enter
-                this.terminal.write('\r\n');
+            case "\r": // Enter
+                this.terminal.write("\r\n");
                 if (this.command.trim()) {
                     this.history.push(this.command);
                     this.historyIndex = this.history.length;
                 }
                 this.executeCommand(this.command);
-                this.command = '';
+                this.command = "";
                 this.cursorPos = 0;
                 break;
-            case '\u0003': // Ctrl+C
-                this.terminal.write('^C');
+            case "\u0003": // Ctrl+C
+                this.terminal.write("^C");
                 this.prompt();
-                this.command = '';
+                this.command = "";
                 this.cursorPos = 0;
                 this.historyIndex = this.history.length;
                 break;
-            case '\u007F': // Backspace
+            case "\u007F": // Backspace
                 if (this.cursorPos > 0) {
-                    this.command = this.command.slice(0, this.cursorPos - 1) + this.command.slice(this.cursorPos);
+                    this.command =
+                        this.command.slice(0, this.cursorPos - 1) +
+                        this.command.slice(this.cursorPos);
                     this.cursorPos--;
                     this.redrawInput();
                 }
                 break;
-            case '\x1b[A': // Up Arrow
+            case "\x1b[A": // Up Arrow
                 if (this.historyIndex > 0) {
                     this.historyIndex--;
                     this.command = this.history[this.historyIndex];
@@ -82,11 +83,11 @@ export class Shell {
                     this.redrawInput();
                 }
                 break;
-            case '\x1b[B': // Down Arrow
+            case "\x1b[B": // Down Arrow
                 if (this.historyIndex < this.history.length) {
                     this.historyIndex++;
                     if (this.historyIndex === this.history.length) {
-                        this.command = '';
+                        this.command = "";
                     } else {
                         this.command = this.history[this.historyIndex];
                     }
@@ -94,46 +95,55 @@ export class Shell {
                     this.redrawInput();
                 }
                 break;
-            case '\t': // Tab
+            case "\t": // Tab
                 this.handleAutocomplete();
                 break;
-            case '\x1b[D': // Left Arrow
+            case "\x1b[D": // Left Arrow
                 if (this.cursorPos > 0) {
                     this.cursorPos--;
                     this.terminal.write(e);
                 }
                 break;
-            case '\x1b[C': // Right Arrow
+            case "\x1b[C": // Right Arrow
                 if (this.cursorPos < this.command.length) {
                     this.cursorPos++;
                     this.terminal.write(e);
                 }
                 break;
-            case '\x1b[1;3D': // Alt+Left
-            case '\x1bb':
+            case "\x1b[1;3D": // Alt+Left
+            case "\x1bb":
                 if (this.cursorPos > 0) {
                     let p = this.cursorPos;
-                    while (p > 0 && this.command[p - 1] === ' ') p--;
-                    while (p > 0 && this.command[p - 1] !== ' ') p--;
+                    while (p > 0 && this.command[p - 1] === " ") p--;
+                    while (p > 0 && this.command[p - 1] !== " ") p--;
                     const dist = this.cursorPos - p;
                     this.cursorPos = p;
                     if (dist > 0) this.terminal.write(`\x1b[${dist}D`);
                 }
                 break;
-            case '\x1b[1;3C': // Alt+Right
-            case '\x1bf':
+            case "\x1b[1;3C": // Alt+Right
+            case "\x1bf":
                 if (this.cursorPos < this.command.length) {
                     let p = this.cursorPos;
-                    while (p < this.command.length && this.command[p] !== ' ') p++;
-                    while (p < this.command.length && this.command[p] === ' ') p++;
+                    while (p < this.command.length && this.command[p] !== " ")
+                        p++;
+                    while (p < this.command.length && this.command[p] === " ")
+                        p++;
                     const dist = p - this.cursorPos;
                     this.cursorPos = p;
                     if (dist > 0) this.terminal.write(`\x1b[${dist}C`);
                 }
                 break;
             default:
-                if (e >= String.fromCharCode(0x20) && e <= String.fromCharCode(0x7E) || e >= '\u00a0') {
-                    this.command = this.command.slice(0, this.cursorPos) + e + this.command.slice(this.cursorPos);
+                if (
+                    (e >= String.fromCharCode(0x20) &&
+                        e <= String.fromCharCode(0x7e)) ||
+                    e >= "\u00a0"
+                ) {
+                    this.command =
+                        this.command.slice(0, this.cursorPos) +
+                        e +
+                        this.command.slice(this.cursorPos);
                     this.cursorPos++;
                     this.redrawInput();
                 }
@@ -159,10 +169,12 @@ export class Shell {
     }
 
     handleAutocomplete() {
-        const args = this.command.split(' ');
+        const args = this.command.split(" ");
         if (args.length === 1) {
             const availableCommands = Object.keys(commands);
-            const matches = availableCommands.filter(c => c.startsWith(this.command));
+            const matches = availableCommands.filter((c) =>
+                c.startsWith(this.command)
+            );
 
             this.applyCompletion(matches, this.command);
         } else {
@@ -173,40 +185,55 @@ export class Shell {
                 const dir = path.dirname(partialPath);
                 const base = path.basename(partialPath);
                 // Fix for root dir or empty dir handling if needed, similar to original code
-                const searchDir = path.resolve(process.cwd(), dir === "." && !partialPath.includes("/") ? "." : dir);
+                const searchDir = path.resolve(
+                    process.cwd(),
+                    dir === "." && !partialPath.includes("/") ? "." : dir
+                );
 
-                fs.promises.readdir(searchDir).then(files => {
-                    const matches = files.filter(f => f.startsWith(base));
-                    if (matches.length > 0) {
-                        // Logic to find common prefix relative to base
-                        // We need to pass matches and the current partial segment to applyCompletion logic
-                        // But applyCompletion logic needs to check common prefix of matches.
+                fs.promises
+                    .readdir(searchDir)
+                    .then((files) => {
+                        const matches = files.filter((f) => f.startsWith(base));
+                        if (matches.length > 0) {
+                            // Logic to find common prefix relative to base
+                            // We need to pass matches and the current partial segment to applyCompletion logic
+                            // But applyCompletion logic needs to check common prefix of matches.
 
-                        // Let's copy the logic from original index.ts
-                        const commonPrefix = matches.reduce((prefix, current) => {
-                            let i = 0;
-                            while (i < prefix.length && i < current.length && prefix[i] === current[i]) {
-                                i++;
+                            // Let's copy the logic from original index.ts
+                            const commonPrefix = matches.reduce(
+                                (prefix, current) => {
+                                    let i = 0;
+                                    while (
+                                        i < prefix.length &&
+                                        i < current.length &&
+                                        prefix[i] === current[i]
+                                    ) {
+                                        i++;
+                                    }
+                                    return prefix.substring(0, i);
+                                },
+                                matches[0]
+                            );
+
+                            if (commonPrefix.length > base.length) {
+                                const completion = commonPrefix.substring(
+                                    base.length
+                                );
+                                this.command += completion;
+                                this.cursorPos += completion.length;
+                                this.terminal.write(completion);
+                            } else if (matches.length > 1) {
+                                this.terminal.writeln("");
+                                printInColumns(this.terminal, matches);
+                                this.prompt();
+                                this.terminal.write(this.command);
+                                this.cursorPos = this.command.length;
                             }
-                            return prefix.substring(0, i);
-                        }, matches[0]);
-
-                        if (commonPrefix.length > base.length) {
-                            const completion = commonPrefix.substring(base.length);
-                            this.command += completion;
-                            this.cursorPos += completion.length;
-                            this.terminal.write(completion);
-                        } else if (matches.length > 1) {
-                            this.terminal.writeln('');
-                            printInColumns(this.terminal, matches);
-                            this.prompt();
-                            this.terminal.write(this.command);
-                            this.cursorPos = this.command.length;
                         }
-                    }
-                }).catch(() => {
-                    // Ignore errors for autocomplete
-                });
+                    })
+                    .catch(() => {
+                        // Ignore errors for autocomplete
+                    });
             }
         }
     }
@@ -215,7 +242,11 @@ export class Shell {
         if (matches.length > 0) {
             const commonPrefix = matches.reduce((prefix, curr) => {
                 let i = 0;
-                while (i < prefix.length && i < curr.length && prefix[i] === curr[i]) {
+                while (
+                    i < prefix.length &&
+                    i < curr.length &&
+                    prefix[i] === curr[i]
+                ) {
                     i++;
                 }
                 return prefix.substring(0, i);
@@ -227,7 +258,7 @@ export class Shell {
                 this.cursorPos += completion.length;
                 this.terminal.write(completion);
             } else if (matches.length > 1) {
-                this.terminal.writeln('');
+                this.terminal.writeln("");
                 printInColumns(this.terminal, matches);
                 this.prompt();
                 this.terminal.write(this.command);

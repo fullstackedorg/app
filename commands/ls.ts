@@ -1,4 +1,3 @@
-
 import { Command } from "./types";
 import { Shell } from "../shell";
 import fs from "fs";
@@ -24,29 +23,33 @@ export const ls: Command = {
         const showLong = flags.includes("l");
         const humanReadable = flags.includes("h");
 
-        const dir = path.resolve(process.cwd(), otherArgs[0] || ".")
+        const dir = path.resolve(process.cwd(), otherArgs[0] || ".");
         try {
             const files = await fs.promises.readdir(dir);
 
             if (showLong) {
-                const fileStats = await Promise.all(files.map(async (file) => {
-                    const filePath = path.resolve(dir, file);
-                    try {
-                        const stats = await fs.promises.stat(filePath);
-                        return { file, stats };
-                    } catch {
-                        return { file, stats: { size: 0 } as fs.Stats };
-                    }
-                }));
+                const fileStats = await Promise.all(
+                    files.map(async (file) => {
+                        const filePath = path.resolve(dir, file);
+                        try {
+                            const stats = await fs.promises.stat(filePath);
+                            return { file, stats };
+                        } catch {
+                            return { file, stats: { size: 0 } as fs.Stats };
+                        }
+                    })
+                );
 
                 const rows = fileStats.map(({ file, stats }) => {
-                    const size = humanReadable ? prettyBytes(stats.size) : stats.size.toString();
+                    const size = humanReadable
+                        ? prettyBytes(stats.size)
+                        : stats.size.toString();
                     return { size, file };
                 });
 
                 if (rows.length === 0) return;
 
-                const maxSizeLen = Math.max(...rows.map(r => r.size.length));
+                const maxSizeLen = Math.max(...rows.map((r) => r.size.length));
 
                 let output = "";
                 for (const row of rows) {
@@ -60,4 +63,4 @@ export const ls: Command = {
             shell.writeln(e.message);
         }
     }
-}
+};
