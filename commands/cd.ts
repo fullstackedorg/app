@@ -9,7 +9,6 @@ export const cd: Command = {
     execute: async (args: string[], shell: Shell) => {
         const dest = args[0] || "/";
         const target = path.resolve(process.cwd(), dest);
-        console.log(dest, target);
         try {
             const stats = await fs.promises.stat(target);
             if (!stats.isDirectory()) {

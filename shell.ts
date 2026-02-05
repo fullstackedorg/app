@@ -168,7 +168,7 @@ export class Shell {
         this.prompt();
     }
 
-    handleAutocomplete() {
+    async handleAutocomplete() {
         const args = this.command.split(" ");
         if (args.length === 1) {
             const availableCommands = Object.keys(commands);
@@ -180,60 +180,72 @@ export class Shell {
         } else {
             const cmdName = args[0];
             // Simple check if command supports file completion (for now assume ls, cat, cd, mkdir do)
-            if (["ls", "cat", "cd", "mkdir"].includes(cmdName)) {
+            if (["ls", "cat", "cd", "mkdir", "rm"].includes(cmdName)) {
                 const partialPath = args.at(-1) || "";
-                const dir = path.dirname(partialPath);
-                const base = path.basename(partialPath);
-                // Fix for root dir or empty dir handling if needed, similar to original code
+                const isTrailingSlash = partialPath.endsWith("/");
+                const dir = isTrailingSlash ? partialPath : path.dirname(partialPath);
+                const base = partialPath
+                    ? isTrailingSlash
+                        ? ""
+                        : path.basename(partialPath)
+                    : "";
+
                 const searchDir = path.resolve(
                     process.cwd(),
-                    dir === "." && !partialPath.includes("/") ? "." : dir
+                    dir === "." && !partialPath.includes("/") && partialPath !== "." ? "." : dir
                 );
 
-                fs.promises
-                    .readdir(searchDir)
-                    .then((files) => {
-                        const matches = files.filter((f) => f.startsWith(base));
-                        if (matches.length > 0) {
-                            // Logic to find common prefix relative to base
-                            // We need to pass matches and the current partial segment to applyCompletion logic
-                            // But applyCompletion logic needs to check common prefix of matches.
+                const files = await fs.promises.readdir(searchDir);
+                const matches = files.filter((f) => f.startsWith(base));
+                if (matches.length > 0) {
+                    // Logic to find common prefix relative to base
+                    // We need to pass matches and the current partial segment to applyCompletion logic
+                    // But applyCompletion logic needs to check common prefix of matches.
+                    const commonPrefix = matches.reduce(
+                        (prefix, current) => {
+                            let i = 0;
+                            while (
+                                i < prefix.length &&
+                                i < current.length &&
+                                prefix[i] === current[i]
+                            ) {
+                                i++;
+                            }
+                            return prefix.substring(0, i);
+                        },
+                        matches[0]
+                    );
 
-                            // Let's copy the logic from original index.ts
-                            const commonPrefix = matches.reduce(
-                                (prefix, current) => {
-                                    let i = 0;
-                                    while (
-                                        i < prefix.length &&
-                                        i < current.length &&
-                                        prefix[i] === current[i]
-                                    ) {
-                                        i++;
-                                    }
-                                    return prefix.substring(0, i);
-                                },
-                                matches[0]
-                            );
-
-                            if (commonPrefix.length > base.length) {
-                                const completion = commonPrefix.substring(
-                                    base.length
-                                );
+                    if (matches.length === 1) {
+                        const match = matches[0];
+                        const matchPath = path.resolve(searchDir, match);
+                        try {
+                            const stats = await fs.promises.stat(matchPath);
+                            if (stats.isDirectory()) {
+                                const completion = match.substring(base.length) + "/";
                                 this.command += completion;
                                 this.cursorPos += completion.length;
                                 this.terminal.write(completion);
-                            } else if (matches.length > 1) {
-                                this.terminal.writeln("");
-                                printInColumns(this.terminal, matches);
-                                this.prompt();
-                                this.terminal.write(this.command);
-                                this.cursorPos = this.command.length;
+                                return;
                             }
-                        }
-                    })
-                    .catch(() => {
-                        // Ignore errors for autocomplete
-                    });
+                        } catch { }
+                    }
+
+                    if (commonPrefix.length > base.length && base.length > 0) {
+                        const completion = commonPrefix.substring(
+                            base.length
+                        );
+                        this.command += completion;
+                        this.cursorPos += completion.length;
+                        this.terminal.write(completion);
+                    } else if (matches.length > 0) {
+                        this.terminal.writeln("");
+                        printInColumns(this.terminal, matches);
+                        this.prompt();
+                        this.terminal.write(this.command);
+                        this.cursorPos = this.command.length;
+                    }
+                }
             }
         }
     }
