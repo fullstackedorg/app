@@ -167,8 +167,8 @@ export class Shell {
             this.applyCompletion(matches, this.command);
         } else {
             const cmdName = args[0];
-            // Simple check if command supports file completion (for now assume ls, cat, cd do)
-            if (["ls", "cat", "cd"].includes(cmdName)) {
+            // Simple check if command supports file completion (for now assume ls, cat, cd, mkdir do)
+            if (["ls", "cat", "cd", "mkdir"].includes(cmdName)) {
                 const partialPath = args.at(-1) || "";
                 const dir = path.dirname(partialPath);
                 const base = path.basename(partialPath);
