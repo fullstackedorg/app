@@ -1,5 +1,5 @@
 import { Terminal } from "@xterm/xterm";
-import { commands } from "./cli";
+import { commands, aliases } from "./cli";
 import path from "path";
 import { printInColumns } from "./utils/printInColumns";
 import fs from "fs";
@@ -148,14 +148,26 @@ export class Shell {
                         this.command.slice(0, this.cursorPos) +
                         e +
                         this.command.slice(this.cursorPos);
-                    this.cursorPos++;
+                    this.cursorPos += e.length;
                     this.redrawInput();
                 }
         }
     }
 
     async executeCommand(cmdStr: string) {
-        const args = cmdStr.trim().split(" ");
+        cmdStr = cmdStr.trim();
+
+        const sortedAliases = Object.keys(aliases).sort(
+            (a, b) => b.length - a.length
+        );
+        for (const alias of sortedAliases) {
+            if (cmdStr === alias || cmdStr.startsWith(alias + " ")) {
+                cmdStr = aliases[alias] + cmdStr.slice(alias.length);
+                break;
+            }
+        }
+
+        const args = cmdStr.split(" ");
         const commandName = args.shift();
 
         if (!commandName) {
@@ -247,7 +259,7 @@ export class Shell {
                     } else if (matches.length > 0) {
                         this.terminal.writeln("");
                         printInColumns(this.terminal, matches);
-                        this.prompt();
+                        this.terminal.write(`${process.cwd()} $ `);
                         this.terminal.write(this.command);
                         this.cursorPos = this.command.length;
                     }
@@ -278,7 +290,7 @@ export class Shell {
             } else if (matches.length > 1) {
                 this.terminal.writeln("");
                 printInColumns(this.terminal, matches);
-                this.prompt();
+                this.terminal.write(`${process.cwd()} $ `);
                 this.terminal.write(this.command);
                 this.cursorPos = this.command.length;
             }

@@ -3,6 +3,7 @@ import b from "bundle";
 import type BundleType from "../../core/internal/bundle/lib/bundle";
 import { Command } from "./types";
 import { Shell } from "../shell";
+import path from "path";
 
 const bundleLib: typeof BundleType = b;
 
@@ -25,7 +26,8 @@ export const bundle: Command = {
     name: "bundle",
     description: "Bundle the project",
     execute: async (args: string[], shell: Shell) => {
-        const result = await bundleLib.bundle(...(args || []));
+        const paths = (args || []).map((p) => path.resolve(process.cwd(), p));
+        const result = await bundleLib.bundle(...paths);
         result.Warnings?.forEach((w) => shell.writeln(formatMessage(w)));
         result.Errors?.forEach((e) => shell.writeln(formatMessage(e)));
     }

@@ -20,3 +20,7 @@ export const commands: Record<string, Command> = {
     packages,
     bundle
 };
+
+export const aliases: Record<string, string> = {
+    npm: "packages"
+};
