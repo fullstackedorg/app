@@ -3,6 +3,7 @@ import { commands, aliases } from "./cli";
 import path from "path";
 import { printInColumns } from "./utils/printInColumns";
 import fs from "fs";
+import { gitLib } from "./cli/git";
 
 const td = new TextDecoder();
 
@@ -12,9 +13,16 @@ export class Shell {
     cursorPos: number = 0;
     history: string[] = [];
     historyIndex: number = 0;
+    gitAuthManager: ReturnType<typeof gitLib.createGitAuthManager>;
+    private inputHandler: ((e: string) => void) | null = null;
 
     constructor(terminal: Terminal) {
         this.terminal = terminal;
+        this.gitAuthManager = gitLib.createGitAuthManager();
+        this.gitAuthManager.on("auth", async (host: string) => {
+            const auth = await this.requestUsernamePassword(host);
+            this.gitAuthManager.writeEvent("authResponse", host, auth);
+        });
     }
 
     prompt() {
@@ -52,6 +60,10 @@ export class Shell {
     }
 
     handleInput(e: string) {
+        if (this.inputHandler) {
+            this.inputHandler(e);
+            return;
+        }
         switch (e) {
             case "\r": // Enter
                 this.terminal.write("\r\n");
@@ -294,6 +306,73 @@ export class Shell {
                 this.terminal.write(this.command);
                 this.cursorPos = this.command.length;
             }
+        }
+    }
+
+    private readInput(
+        prompt: string,
+        hidden: boolean = false
+    ): Promise<string> {
+        return new Promise((resolve, reject) => {
+            this.terminal.write(prompt);
+            let input = "";
+            let cursor = 0;
+
+            this.inputHandler = (e: string) => {
+                switch (e) {
+                    case "\r": // Enter
+                        this.terminal.write("\r\n");
+                        this.inputHandler = null;
+                        resolve(input);
+                        break;
+                    case "\u0003": // Ctrl+C
+                        this.terminal.write("^C\r\n");
+                        this.inputHandler = null;
+                        reject(new Error("CANCELED"));
+                        break;
+                    case "\u007F": // Backspace
+                        if (cursor > 0) {
+                            input =
+                                input.slice(0, cursor - 1) +
+                                input.slice(cursor);
+                            cursor--;
+                            if (!hidden) this.terminal.write("\b \b");
+                        }
+                        break;
+                    default:
+                        if (e >= " " && e <= "~") {
+                            input =
+                                input.slice(0, cursor) +
+                                e +
+                                input.slice(cursor);
+                            cursor += e.length;
+                            if (hidden) {
+                                // For password, we don't show characters or show *
+                                // Standard unix login doesn't show anything
+                            } else {
+                                this.terminal.write(e);
+                            }
+                        }
+                }
+            };
+        });
+    }
+
+    async requestUsernamePassword(
+        resource?: string
+    ): Promise<{ username: string; password: string } | null> {
+        try {
+            const usernamePrompt = resource
+                ? `Username for '${resource}': `
+                : "Username: ";
+            const passwordPrompt = resource
+                ? `Password for '${resource}': `
+                : "Password: ";
+            const username = await this.readInput(usernamePrompt);
+            const password = await this.readInput(passwordPrompt, true);
+            return { username, password };
+        } catch (e) {
+            return null;
         }
     }
 }

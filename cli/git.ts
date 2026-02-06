@@ -3,10 +3,10 @@ import g from "git";
 import type GitType from "../../core/internal/bundle/lib/git/index.ts";
 import { parseArgs, getDirectory, runDuplex } from "./utils.ts";
 import { Command } from "./types";
-import { Shell } from "../shell";
+import type { Shell } from "../shell";
 import { green, red, yellow } from "../utils/colors";
 
-const gitLib: typeof GitType = g;
+export const gitLib: typeof GitType = g;
 
 function formatStatus(status: any): string {
     const lines: string[] = [];
