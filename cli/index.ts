@@ -5,6 +5,9 @@ import { cd } from "./cd";
 import { clear } from "./clear";
 import { mkdir } from "./mkdir";
 import { rm } from "./rm";
+import { git } from "./git";
+import { packages } from "./packages";
+import { bundle } from "./bundle";
 
 export const commands: Record<string, Command> = {
     ls,
@@ -12,5 +15,8 @@ export const commands: Record<string, Command> = {
     cd,
     clear,
     mkdir,
-    rm
+    rm,
+    git,
+    packages,
+    bundle
 };

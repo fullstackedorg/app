@@ -8,7 +8,7 @@ import { Shell } from "./shell";
 const main = document.createElement("main");
 document.body.append(main);
 
-const terminal = new Terminal({ cursorBlink: true });
+const terminal = new Terminal({ cursorBlink: true, convertEol: true });
 const fitAddon = new FitAddon();
 terminal.loadAddon(fitAddon);
 terminal.open(main);

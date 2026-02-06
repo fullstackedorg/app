@@ -53,7 +53,7 @@ export const ls: Command = {
 
                 let output = "";
                 for (const row of rows) {
-                    output += `${row.size.padStart(maxSizeLen)} ${row.file}\r\n`;
+                    output += `${row.size.padStart(maxSizeLen)} ${row.file}\n`;
                 }
                 shell.write(output);
             } else {

@@ -1,8 +1,10 @@
 import { Terminal } from "@xterm/xterm";
-import { commands } from "./commands";
+import { commands } from "./cli";
 import path from "path";
 import { printInColumns } from "./utils/printInColumns";
 import fs from "fs";
+
+const td = new TextDecoder();
 
 export class Shell {
     terminal: Terminal;
@@ -22,12 +24,14 @@ export class Shell {
         this.terminal.write(`${process.cwd()} $ `);
     }
 
-    write(data: string) {
-        this.terminal.write(data);
+    write(data: string | Uint8Array) {
+        if (typeof data === "string") {
+            this.terminal.write(data);
+        } else this.terminal.write(td.decode(data));
     }
 
-    writeln(data: string) {
-        this.terminal.writeln(data);
+    writeln(data?: string) {
+        if (data) this.terminal.writeln(data);
     }
 
     clear() {
