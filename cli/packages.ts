@@ -16,30 +16,34 @@ function renderProgressBar(progress: number): string {
     return "[" + "#".repeat(filled) + ".".repeat(empty) + "]";
 }
 
-function formatProgress(progress: any): string {
+export function formatProgress(progress: any, width: number = 80): string {
     const items = Array.isArray(progress) ? progress : [progress];
 
     if (items.length === 0) return "";
 
-    const maxNameLen = items.reduce(
+    let maxNameLen = items.reduce(
         (max, item) => Math.max(max, (item.name || "").length),
         0
     );
-    const maxStageLen = items.reduce(
-        (max, item) => Math.max(max, (item.stage || "").length),
-        0
-    );
+
+    // Bar (22) + space (1) + Percent (4) + space (1) = 28
+    // Add extra safety buffer of 2 chars = 30
+    const overhead = 30;
+    const availableForName = Math.max(10, width - overhead);
+
+    if (maxNameLen > availableForName) {
+        maxNameLen = availableForName;
+    }
 
     return items
         .map((item) => {
             let line = "";
 
-            // Stage
-            const stage = item.stage || "";
-            line += `[${stage}]`.padEnd(maxStageLen + 3); // +3 for brackets and space
-
             // Name
-            const name = item.name || "";
+            let name = item.name || "";
+            if (name.length > maxNameLen) {
+                name = name.slice(0, Math.max(0, maxNameLen - 3)) + "...";
+            }
             line += name.padEnd(maxNameLen + 1); // +1 for space
 
             // Bar
@@ -132,7 +136,8 @@ export const packages: Command = {
                         output = "Resolving...";
                     } else {
                         output = formatProgress(
-                            Array.from(progressMap.values())
+                            Array.from(progressMap.values()),
+                            shell.terminal.cols
                         );
                     }
 
@@ -153,7 +158,9 @@ export const packages: Command = {
                     ...positionals
                 );
                 uninstallEmitter.on("progress", (progress) => {
-                    shell.writeln(formatProgress(progress));
+                    shell.writeln(
+                        formatProgress(progress, shell.terminal.cols)
+                    );
                 });
                 await uninstallEmitter.duplex.promise();
                 break;

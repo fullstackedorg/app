@@ -30,7 +30,10 @@ export const bundle: Command = {
         shell: Shell,
         onCancel: (handler: () => void) => void
     ) => {
-        const paths = (args || []).map((p) => path.resolve(process.cwd(), p));
+        if (args.length === 0) {
+            args.push(".");
+        }
+        const paths = args.map((p) => path.resolve(process.cwd(), p));
         const result = await bundleLib.bundle(...paths);
         result.Warnings?.forEach((w) => shell.writeln(formatMessage(w)));
         result.Errors?.forEach((e) => shell.writeln(formatMessage(e)));
