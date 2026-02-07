@@ -5,7 +5,11 @@ import fs from "fs";
 
 export const mkdir: Command = {
     name: "mkdir",
-    execute: async (args: string[], shell: Shell) => {
+    execute: async (
+        args: string[],
+        shell: Shell,
+        onCancel: (handler: () => void) => void
+    ) => {
         let recursive = false;
         const dirs: string[] = [];
 

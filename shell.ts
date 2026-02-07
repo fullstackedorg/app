@@ -13,15 +13,18 @@ export class Shell {
     cursorPos: number = 0;
     history: string[] = [];
     historyIndex: number = 0;
-    gitAuthManager: ReturnType<typeof gitLib.createGitAuthManager>;
+    gitAuthManager: Awaited<ReturnType<typeof gitLib.createGitAuthManager>>;
     private inputHandler: ((e: string) => void) | null = null;
 
     constructor(terminal: Terminal) {
         this.terminal = terminal;
-        this.gitAuthManager = gitLib.createGitAuthManager();
-        this.gitAuthManager.on("auth", async (host: string) => {
-            const auth = await this.requestUsernamePassword(host);
-            this.gitAuthManager.writeEvent("authResponse", host, auth);
+        gitLib.createGitAuthManager().then((m) => {
+            this.gitAuthManager = m;
+            this.gitAuthManager.on("auth", async (host: string) => {
+                console.log(host);
+                const auth = await this.requestUsernamePassword(host);
+                this.gitAuthManager.writeEvent("authResponse", host, auth);
+            });
         });
     }
 
@@ -59,6 +62,8 @@ export class Shell {
         }
     }
 
+    private currentCancelHandler: (() => void) | null = null;
+
     handleInput(e: string) {
         if (this.inputHandler) {
             this.inputHandler(e);
@@ -76,6 +81,11 @@ export class Shell {
                 this.cursorPos = 0;
                 break;
             case "\u0003": // Ctrl+C
+                if (this.currentCancelHandler) {
+                    this.currentCancelHandler();
+                    this.currentCancelHandler = null;
+                    return;
+                }
                 this.terminal.write("^C");
                 this.prompt();
                 this.command = "";
@@ -189,7 +199,10 @@ export class Shell {
 
         const command = commands[commandName];
         if (command) {
-            await command.execute(args, this);
+            await command.execute(args, this, (handler) => {
+                this.currentCancelHandler = handler;
+            });
+            this.currentCancelHandler = null;
         } else {
             this.writeln(`command not found: ${commandName}`);
         }

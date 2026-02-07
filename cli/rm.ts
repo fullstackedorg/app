@@ -6,7 +6,11 @@ import path from "path";
 export const rm: Command = {
     name: "rm",
     description: "remove files or directories",
-    execute: async (args: string[], shell: Shell) => {
+    execute: async (
+        args: string[],
+        shell: Shell,
+        onCancel: (handler: () => void) => void
+    ) => {
         let flags = "";
         const otherArgs: string[] = [];
 

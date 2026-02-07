@@ -114,7 +114,11 @@ function formatTags(tags: any[]): string {
 export const git: Command = {
     name: "git",
     description: "Run git commands",
-    execute: async (args: string[], shell: Shell) => {
+    execute: async (
+        args: string[],
+        shell: Shell,
+        onCancel: (handler: () => void) => void
+    ) => {
         const command = args[0];
         const { flags, positionals } = parseArgs(args.slice(1));
         const directory = getDirectory(flags);
@@ -124,19 +128,19 @@ export const git: Command = {
                 case "init":
                     if (positionals.length < 1)
                         throw new Error("Usage: git init <url>");
-                    shell.writeln(gitLib.init(directory, positionals[0]));
+                    shell.writeln(await gitLib.init(directory, positionals[0]));
                     break;
                 case "status":
-                    shell.writeln(formatStatus(gitLib.status(directory)));
+                    shell.writeln(formatStatus(await gitLib.status(directory)));
                     break;
                 case "add":
                     if (positionals?.length < 1)
                         throw new Error("Usage: git add <path>");
-                    shell.writeln(gitLib.add(directory, positionals[0]));
+                    shell.writeln(await gitLib.add(directory, positionals[0]));
                     break;
 
                 case "log":
-                    shell.writeln(formatLog(gitLib.log(directory)));
+                    shell.writeln(formatLog(await gitLib.log(directory)));
                     break;
                 case "clone":
                     if (positionals.length < 1)
@@ -159,7 +163,9 @@ export const git: Command = {
                         email: authorEmail || "user@fullstacked.org"
                     };
 
-                    shell.writeln(gitLib.commit(directory, message, author));
+                    shell.writeln(
+                        await gitLib.commit(directory, message, author)
+                    );
                     break;
                 case "pull":
                     await runDuplex(gitLib.pull(directory), shell);
@@ -168,13 +174,15 @@ export const git: Command = {
                     await runDuplex(gitLib.push(directory), shell);
                     break;
                 case "reset":
-                    shell.writeln(gitLib.reset(directory, ...positionals));
+                    shell.writeln(
+                        await gitLib.reset(directory, ...positionals)
+                    );
                     break;
                 case "branch":
-                    shell.writeln(formatBranch(gitLib.branch(directory)));
+                    shell.writeln(formatBranch(await gitLib.branch(directory)));
                     break;
                 case "tags":
-                    shell.writeln(formatTags(gitLib.tags(directory)));
+                    shell.writeln(formatTags(await gitLib.tags(directory)));
                     break;
                 case "checkout":
                     if (positionals.length < 1)

@@ -25,7 +25,11 @@ function formatMessage(msg: any): string {
 export const bundle: Command = {
     name: "bundle",
     description: "Bundle the project",
-    execute: async (args: string[], shell: Shell) => {
+    execute: async (
+        args: string[],
+        shell: Shell,
+        onCancel: (handler: () => void) => void
+    ) => {
         const paths = (args || []).map((p) => path.resolve(process.cwd(), p));
         const result = await bundleLib.bundle(...paths);
         result.Warnings?.forEach((w) => shell.writeln(formatMessage(w)));

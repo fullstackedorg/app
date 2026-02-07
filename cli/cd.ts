@@ -6,7 +6,11 @@ import fs from "fs";
 export const cd: Command = {
     name: "cd",
 
-    execute: async (args: string[], shell: Shell) => {
+    execute: async (
+        args: string[],
+        shell: Shell,
+        onCancel: (handler: () => void) => void
+    ) => {
         const dest = args[0] || "/";
         const target = path.resolve(process.cwd(), dest);
         try {

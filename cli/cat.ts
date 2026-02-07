@@ -6,7 +6,11 @@ import path from "path";
 export const cat: Command = {
     name: "cat",
 
-    execute: async (args: string[], shell: Shell) => {
+    execute: async (
+        args: string[],
+        shell: Shell,
+        onCancel: (handler: () => void) => void
+    ) => {
         const file = args[0];
         if (!file) {
             shell.writeln("Usage: cat <filename>");

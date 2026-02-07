@@ -56,7 +56,11 @@ function formatProgress(progress: any): string {
 export const packages: Command = {
     name: "npm",
     description: "Manage packages",
-    execute: async (args: string[], shell: Shell) => {
+    execute: async (
+        args: string[],
+        shell: Shell,
+        onCancel: (handler: () => void) => void
+    ) => {
         const command = args[0];
         const { flags, positionals } = parseArgs(args.slice(1));
         const directory = getDirectory(flags);

@@ -8,7 +8,11 @@ import prettyBytes from "pretty-bytes";
 export const ls: Command = {
     name: "ls",
 
-    execute: async (args: string[], shell: Shell) => {
+    execute: async (
+        args: string[],
+        shell: Shell,
+        onCancel: (handler: () => void) => void
+    ) => {
         let flags = "";
         const otherArgs: string[] = [];
 
