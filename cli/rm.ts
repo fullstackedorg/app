@@ -27,7 +27,6 @@ export const rm: Command = {
 
         if (otherArgs.length === 0) {
             shell.writeln("usage: rm [-rf] <file/dir>");
-            return;
         }
 
         for (const arg of otherArgs) {

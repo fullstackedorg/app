@@ -27,7 +27,7 @@ export const ls: Command = {
         const showLong = flags.includes("l");
         const humanReadable = flags.includes("h");
 
-        const dir = path.resolve(process.cwd(), otherArgs[0] || ".");
+        const dir = path.resolve(otherArgs[0] || ".");
         try {
             const files = await fs.promises.readdir(dir);
 

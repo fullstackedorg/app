@@ -177,36 +177,77 @@ export class Shell {
     }
 
     async executeCommand(cmdStr: string) {
-        cmdStr = cmdStr.trim();
+        await this.executeLine(cmdStr);
+        this.prompt();
+    }
 
-        const sortedAliases = Object.keys(aliases).sort(
-            (a, b) => b.length - a.length
-        );
-        for (const alias of sortedAliases) {
-            if (cmdStr === alias || cmdStr.startsWith(alias + " ")) {
-                cmdStr = aliases[alias] + cmdStr.slice(alias.length);
-                break;
+    async executeLine(cmdStr: string): Promise<number> {
+        // Split by && but respect quotes if possible?
+        // For now simple split as requested, ensuring we don't break string literals if we can avoid it.
+        // But a simple split("&&") is the requested task.
+        const commandsToRun = this.splitCommands(cmdStr);
+        let lastExitCode = 0;
+
+        for (let cmd of commandsToRun) {
+            cmd = cmd.trim();
+            if (!cmd) continue;
+
+            const sortedAliases = Object.keys(aliases).sort(
+                (a, b) => b.length - a.length
+            );
+
+            let aliased = false;
+            for (const alias of sortedAliases) {
+                if (cmd === alias || cmd.startsWith(alias + " ")) {
+                    const expandedCmd =
+                        aliases[alias] + cmd.slice(alias.length);
+                    // Check if expansion results in multiple commands
+                    const expandedCommands = this.splitCommands(expandedCmd);
+                    if (expandedCommands.length > 1) {
+                        lastExitCode = await this.executeLine(expandedCmd);
+                        aliased = true;
+                    } else {
+                        cmd = expandedCmd;
+                    }
+                    break;
+                }
+            }
+
+            if (aliased) {
+                if (lastExitCode !== 0) break;
+                continue;
+            }
+
+            const args = cmd.split(" ");
+            const commandName = args.shift();
+
+            if (!commandName) {
+                continue;
+            }
+
+            const command = commands[commandName];
+            if (command) {
+                const exitCode = await command.execute(
+                    args,
+                    this,
+                    (handler) => {
+                        this.currentCancelHandler = handler;
+                    }
+                );
+                this.currentCancelHandler = null;
+
+                if (typeof exitCode === "number" && exitCode !== 0) {
+                    lastExitCode = exitCode;
+                    break;
+                }
+            } else {
+                this.writeln(`command not found: ${commandName}`);
+                lastExitCode = 1;
+                break; // Stop execution on error
             }
         }
 
-        const args = cmdStr.split(" ");
-        const commandName = args.shift();
-
-        if (!commandName) {
-            this.prompt();
-            return;
-        }
-
-        const command = commands[commandName];
-        if (command) {
-            await command.execute(args, this, (handler) => {
-                this.currentCancelHandler = handler;
-            });
-            this.currentCancelHandler = null;
-        } else {
-            this.writeln(`command not found: ${commandName}`);
-        }
-        this.prompt();
+        return lastExitCode;
     }
 
     async handleAutocomplete() {
@@ -387,5 +428,40 @@ export class Shell {
         } catch (e) {
             return null;
         }
+    }
+
+    private splitCommands(cmdStr: string): string[] {
+        const commands: string[] = [];
+        let currentCommand = "";
+        let inQuote: string | null = null;
+
+        for (let i = 0; i < cmdStr.length; i++) {
+            const char = cmdStr[i];
+
+            if (inQuote) {
+                if (char === inQuote) {
+                    inQuote = null;
+                }
+                currentCommand += char;
+            } else {
+                if (char === '"' || char === "'") {
+                    inQuote = char;
+                    currentCommand += char;
+                } else if (char === "&" && cmdStr[i + 1] === "&") {
+                    // Start of && operator
+                    commands.push(currentCommand);
+                    currentCommand = "";
+                    i++; // Skip the second &
+                } else {
+                    currentCommand += char;
+                }
+            }
+        }
+
+        if (currentCommand) {
+            commands.push(currentCommand);
+        }
+
+        return commands;
     }
 }

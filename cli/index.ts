@@ -9,7 +9,8 @@ import { git } from "./git";
 import { packages } from "./packages";
 import { bundle } from "./bundle";
 import { run } from "./run";
-import { node } from "./node";
+import { exec } from "./exec";
+import { npm } from "./npm";
 
 export const commands: Record<string, Command> = {
     ls,
@@ -22,9 +23,11 @@ export const commands: Record<string, Command> = {
     packages,
     bundle,
     run,
-    node
+    exec,
+    npm
 };
 
 export const aliases: Record<string, string> = {
-    npm: "packages"
+    node: "exec",
+    "npx fullstacked": "bundle && run"
 };

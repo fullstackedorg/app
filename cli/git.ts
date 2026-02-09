@@ -175,7 +175,11 @@ export const git: Command = {
                     break;
                 case "reset":
                     shell.writeln(
-                        await gitLib.reset(directory, ...positionals)
+                        await gitLib.reset(
+                            directory,
+                            !!flags["hard"],
+                            ...positionals
+                        )
                     );
                     break;
                 case "branch":
@@ -206,6 +210,13 @@ export const git: Command = {
                             null,
                             2
                         )
+                    );
+                    break;
+                case "restore":
+                    if (positionals?.length < 1)
+                        throw new Error("Usage: git restore <paths>");
+                    shell.writeln(
+                        await gitLib.restore(directory, ...positionals)
                     );
                     break;
                 default:

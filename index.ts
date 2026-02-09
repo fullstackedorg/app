@@ -1,6 +1,5 @@
 import "./style.css";
 import "@xterm/xterm/css/xterm.css";
-import "fullstacked";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { Shell } from "./shell";

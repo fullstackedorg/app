@@ -1,7 +1,6 @@
 // @ts-ignore
 import r from "run";
 import type RunType from "../../core/internal/bundle/lib/run";
-import path from "path";
 import { Shell } from "../shell";
 import { Command } from "./types";
 
@@ -15,12 +14,15 @@ export const run: Command = {
         shell: Shell,
         onCancel: (handler: () => void) => void
     ) => {
-        const dest = args[0] || ".";
-        const target = path.resolve(process.cwd(), dest);
+        const target = args[0] || ".";
+
         try {
             await runFn(target);
         } catch (e) {
             shell.writeln(`run: ${e.message}`);
+            return 1;
         }
+
+        return 0;
     }
 };

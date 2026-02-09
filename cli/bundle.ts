@@ -3,7 +3,6 @@ import b from "bundle";
 import type BundleType from "../../core/internal/bundle/lib/bundle";
 import { Command } from "./types";
 import { Shell } from "../shell";
-import path from "path";
 
 export const bundleLib: typeof BundleType = b;
 
@@ -30,12 +29,12 @@ export const bundle: Command = {
         shell: Shell,
         onCancel: (handler: () => void) => void
     ) => {
-        if (args.length === 0) {
-            args.push(".");
-        }
-        const paths = args.map((p) => path.resolve(process.cwd(), p));
-        const result = await bundleLib.bundle(...paths);
+        const target = args[0] || ".";
+        const result = await bundleLib.bundle(target);
         result.Warnings?.forEach((w) => shell.writeln(formatMessage(w)));
         result.Errors?.forEach((e) => shell.writeln(formatMessage(e)));
+
+        if (result.Errors && result.Errors.length > 0) return 1;
+        return 0;
     }
 };

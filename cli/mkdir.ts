@@ -25,7 +25,6 @@ export const mkdir: Command = {
 
         if (dirs.length === 0) {
             shell.writeln("mkdir: missing operand");
-            return;
         }
 
         for (const dir of dirs) {

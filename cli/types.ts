@@ -7,5 +7,5 @@ export interface Command {
         args: string[],
         shell: Shell,
         onCancel: (handler: () => void) => void
-    ) => void | Promise<void>;
+    ) => void | number | Promise<void | number>;
 }

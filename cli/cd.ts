@@ -17,7 +17,6 @@ export const cd: Command = {
             const stats = await fs.promises.stat(target);
             if (!stats.isDirectory()) {
                 shell.writeln(`cd: not a directory: ${dest}`);
-                return;
             }
             process.chdir(target);
         } catch (e: any) {
