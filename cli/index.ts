@@ -9,6 +9,7 @@ import { git } from "./git";
 import { packages } from "./packages";
 import { bundle } from "./bundle";
 import { run } from "./run";
+import { node } from "./node";
 
 export const commands: Record<string, Command> = {
     ls,
@@ -20,7 +21,8 @@ export const commands: Record<string, Command> = {
     git,
     packages,
     bundle,
-    run
+    run,
+    node
 };
 
 export const aliases: Record<string, string> = {

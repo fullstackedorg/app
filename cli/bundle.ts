@@ -5,9 +5,9 @@ import { Command } from "./types";
 import { Shell } from "../shell";
 import path from "path";
 
-const bundleLib: typeof BundleType = b;
+export const bundleLib: typeof BundleType = b;
 
-function formatMessage(msg: any): string {
+export function formatMessage(msg: any): string {
     if (typeof msg === "string") return msg.replace(/\n/g, "\r\n");
     if (msg.text) {
         let out = msg.text;
