@@ -63,8 +63,22 @@ export class Shell {
     }
 
     private currentCancelHandler: (() => void) | null = null;
+    private capturedInputHandler: ((data: string) => void) | null = null;
+
+    captureInput(handler: (data: string) => void) {
+        this.capturedInputHandler = handler;
+    }
+
+    releaseInput() {
+        this.capturedInputHandler = null;
+    }
 
     handleInput(e: string) {
+        if (this.capturedInputHandler) {
+            this.capturedInputHandler(e);
+            return;
+        }
+
         if (this.inputHandler) {
             this.inputHandler(e);
             return;
@@ -262,7 +276,7 @@ export class Shell {
         } else {
             const cmdName = args[0];
             // Simple check if command supports file completion (for now assume ls, cat, cd, mkdir do)
-            if (["ls", "cat", "cd", "mkdir", "rm"].includes(cmdName)) {
+            if (["ls", "cat", "cd", "mkdir", "rm", "vi", "mv"].includes(cmdName)) {
                 const partialPath = args.at(-1) || "";
                 const isTrailingSlash = partialPath.endsWith("/");
                 const dir = isTrailingSlash
@@ -314,7 +328,7 @@ export class Shell {
                                 this.terminal.write(completion);
                                 return;
                             }
-                        } catch {}
+                        } catch { }
                     }
 
                     if (commonPrefix.length > base.length && base.length > 0) {

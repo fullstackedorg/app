@@ -11,6 +11,8 @@ import { bundle } from "./bundle";
 import { run } from "./run";
 import { exec } from "./exec";
 import { npm } from "./npm";
+import { vi } from "./vi";
+import { mv } from "./mv";
 
 export const commands: Record<string, Command> = {
     ls,
@@ -19,12 +21,14 @@ export const commands: Record<string, Command> = {
     clear,
     mkdir,
     rm,
+    mv,
     git,
     packages,
     bundle,
     run,
     exec,
-    npm
+    npm,
+    vi
 };
 
 export const aliases: Record<string, string> = {

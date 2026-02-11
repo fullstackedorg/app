@@ -22,6 +22,9 @@ export const cat: Command = {
                 "utf8"
             );
             shell.write(data.replace(/\n/g, "\r\n"));
+            if (!data.endsWith("\n")) {
+                shell.write("\r\n");
+            }
         } catch (e: any) {
             shell.writeln(e.message);
         }
