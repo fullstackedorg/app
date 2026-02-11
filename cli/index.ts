@@ -33,5 +33,5 @@ export const commands: Record<string, Command> = {
 
 export const aliases: Record<string, string> = {
     node: "exec",
-    "fullstacked": "bundle && run"
+    fullstacked: "bundle && run"
 };

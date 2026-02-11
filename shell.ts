@@ -276,7 +276,9 @@ export class Shell {
         } else {
             const cmdName = args[0];
             // Simple check if command supports file completion (for now assume ls, cat, cd, mkdir do)
-            if (["ls", "cat", "cd", "mkdir", "rm", "vi", "mv"].includes(cmdName)) {
+            if (
+                ["ls", "cat", "cd", "mkdir", "rm", "vi", "mv"].includes(cmdName)
+            ) {
                 const partialPath = args.at(-1) || "";
                 const isTrailingSlash = partialPath.endsWith("/");
                 const dir = isTrailingSlash
@@ -328,7 +330,7 @@ export class Shell {
                                 this.terminal.write(completion);
                                 return;
                             }
-                        } catch { }
+                        } catch {}
                     }
 
                     if (commonPrefix.length > base.length && base.length > 0) {

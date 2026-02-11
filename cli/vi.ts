@@ -1,4 +1,3 @@
-
 import { Command } from "./types";
 import { Shell } from "../shell";
 import fs from "fs";
@@ -7,7 +6,7 @@ import path from "path";
 enum Mode {
     NORMAL,
     INSERT,
-    COMMAND,
+    COMMAND
 }
 
 class Vi {
@@ -37,7 +36,10 @@ class Vi {
 
         if (this.filePath) {
             try {
-                const content = fs.readFileSync(path.resolve(process.cwd(), this.filePath), "utf-8");
+                const content = fs.readFileSync(
+                    path.resolve(process.cwd(), this.filePath),
+                    "utf-8"
+                );
                 this.lines = content.split("\n");
                 if (this.lines.length === 0) this.lines = [""];
             } catch (e) {
@@ -95,27 +97,39 @@ class Vi {
             case "\x1b[B":
                 if (this.cursorY < this.lines.length - 1) {
                     this.cursorY++;
-                    this.cursorX = Math.min(this.cursorX, this.lines[this.cursorY].length);
+                    this.cursorX = Math.min(
+                        this.cursorX,
+                        this.lines[this.cursorY].length
+                    );
                 }
                 break;
             case "k":
             case "\x1b[A":
                 if (this.cursorY > 0) {
                     this.cursorY--;
-                    this.cursorX = Math.min(this.cursorX, this.lines[this.cursorY].length);
+                    this.cursorX = Math.min(
+                        this.cursorX,
+                        this.lines[this.cursorY].length
+                    );
                 }
                 break;
             case "l":
             case "\x1b[C":
-                if (this.cursorX < this.lines[this.cursorY].length) this.cursorX++;
+                if (this.cursorX < this.lines[this.cursorY].length)
+                    this.cursorX++;
                 this.pendingOperator = null;
                 break;
             case "x": // Delete char
                 {
                     const line = this.lines[this.cursorY];
                     if (line.length > 0 && this.cursorX < line.length) {
-                        this.lines[this.cursorY] = line.slice(0, this.cursorX) + line.slice(this.cursorX + 1);
-                        if (this.cursorX >= this.lines[this.cursorY].length && this.cursorX > 0) {
+                        this.lines[this.cursorY] =
+                            line.slice(0, this.cursorX) +
+                            line.slice(this.cursorX + 1);
+                        if (
+                            this.cursorX >= this.lines[this.cursorY].length &&
+                            this.cursorX > 0
+                        ) {
                             this.cursorX--;
                         }
                         this.isDirty = true;
@@ -127,7 +141,8 @@ class Vi {
                     // dd - delete line
                     this.lines.splice(this.cursorY, 1);
                     if (this.lines.length === 0) this.lines = [""];
-                    if (this.cursorY >= this.lines.length) this.cursorY = this.lines.length - 1;
+                    if (this.cursorY >= this.lines.length)
+                        this.cursorY = this.lines.length - 1;
                     this.cursorX = 0; // Reset cursor to start of line (or implement smarter logic)
                     this.pendingOperator = null;
                     this.isDirty = true;
@@ -142,39 +157,54 @@ class Vi {
     }
 
     handleInsertInput(key: string) {
-        if (key === "\x1b[A") { // Up
+        if (key === "\x1b[A") {
+            // Up
             if (this.cursorY > 0) {
                 this.cursorY--;
-                this.cursorX = Math.min(this.cursorX, this.lines[this.cursorY].length);
+                this.cursorX = Math.min(
+                    this.cursorX,
+                    this.lines[this.cursorY].length
+                );
             }
             return;
         }
-        if (key === "\x1b[B") { // Down
+        if (key === "\x1b[B") {
+            // Down
             if (this.cursorY < this.lines.length - 1) {
                 this.cursorY++;
-                this.cursorX = Math.min(this.cursorX, this.lines[this.cursorY].length);
+                this.cursorX = Math.min(
+                    this.cursorX,
+                    this.lines[this.cursorY].length
+                );
             }
             return;
         }
-        if (key === "\x1b[C") { // Right
+        if (key === "\x1b[C") {
+            // Right
             if (this.cursorX < this.lines[this.cursorY].length) this.cursorX++;
             return;
         }
-        if (key === "\x1b[D") { // Left
+        if (key === "\x1b[D") {
+            // Left
             if (this.cursorX > 0) this.cursorX--;
             return;
         }
 
-        if (key === "\x1b") { // ESC
+        if (key === "\x1b") {
+            // ESC
             this.mode = Mode.NORMAL;
             this.message = "";
             if (this.cursorX > 0) this.cursorX--; // Vim moves back on ESC
             return;
         }
 
-        if (key === "\r") { // Enter
+        if (key === "\r") {
+            // Enter
             const rest = this.lines[this.cursorY].slice(this.cursorX);
-            this.lines[this.cursorY] = this.lines[this.cursorY].slice(0, this.cursorX);
+            this.lines[this.cursorY] = this.lines[this.cursorY].slice(
+                0,
+                this.cursorX
+            );
             this.cursorY++;
             this.lines.splice(this.cursorY, 0, rest);
             this.cursorX = 0;
@@ -182,10 +212,12 @@ class Vi {
             return;
         }
 
-        if (key === "\x7f") { // Backspace
+        if (key === "\x7f") {
+            // Backspace
             if (this.cursorX > 0) {
                 const line = this.lines[this.cursorY];
-                this.lines[this.cursorY] = line.slice(0, this.cursorX - 1) + line.slice(this.cursorX);
+                this.lines[this.cursorY] =
+                    line.slice(0, this.cursorX - 1) + line.slice(this.cursorX);
                 this.cursorX--;
                 this.isDirty = true;
             } else if (this.cursorY > 0) {
@@ -203,7 +235,8 @@ class Vi {
         // Simple printable char check
         if (key.length === 1 && key >= " " && key <= "~") {
             const line = this.lines[this.cursorY];
-            this.lines[this.cursorY] = line.slice(0, this.cursorX) + key + line.slice(this.cursorX);
+            this.lines[this.cursorY] =
+                line.slice(0, this.cursorX) + key + line.slice(this.cursorX);
             this.cursorX++;
             this.isDirty = true;
         }
@@ -280,7 +313,10 @@ class Vi {
             this.stop();
         } else if (cmd === "w" || cmd === "w!") {
             if (this.filePath) {
-                fs.writeFileSync(path.resolve(process.cwd(), this.filePath), this.lines.join("\n"));
+                fs.writeFileSync(
+                    path.resolve(process.cwd(), this.filePath),
+                    this.lines.join("\n")
+                );
                 this.message = `"${this.filePath}" written`;
                 this.isDirty = false;
             } else {
@@ -288,7 +324,10 @@ class Vi {
             }
         } else if (cmd === "wq" || cmd === "wq!") {
             if (this.filePath) {
-                fs.writeFileSync(path.resolve(process.cwd(), this.filePath), this.lines.join("\n"));
+                fs.writeFileSync(
+                    path.resolve(process.cwd(), this.filePath),
+                    this.lines.join("\n")
+                );
                 this.stop();
             } else {
                 this.message = "No file name";
@@ -296,7 +335,8 @@ class Vi {
         } else if (cmd === "d") {
             this.lines.splice(this.cursorY, 1);
             if (this.lines.length === 0) this.lines = [""];
-            if (this.cursorY >= this.lines.length) this.cursorY = this.lines.length - 1;
+            if (this.cursorY >= this.lines.length)
+                this.cursorY = this.lines.length - 1;
             this.cursorX = 0;
             this.isDirty = true;
         } else if (cmd === "set number" || cmd === "set nu") {
@@ -318,14 +358,19 @@ class Vi {
 
         let buffer = "\x1b[H\x1b[2J"; // Clear screen
 
-        const lineNumberWidth = this.showLineNumbers ? this.lines.length.toString().length + 1 : 0;
+        const lineNumberWidth = this.showLineNumbers
+            ? this.lines.length.toString().length + 1
+            : 0;
 
         for (let i = 0; i < this.rows; i++) {
             const lineIdx = this.offsetY + i;
             if (lineIdx < this.lines.length) {
                 let prefix = "";
                 if (this.showLineNumbers) {
-                    prefix = (lineIdx + 1).toString().padStart(lineNumberWidth - 1, " ") + " ";
+                    prefix =
+                        (lineIdx + 1)
+                            .toString()
+                            .padStart(lineNumberWidth - 1, " ") + " ";
                     buffer += "\x1b[33m" + prefix + "\x1b[0m"; // Yellow line number
                 }
                 buffer += this.lines[lineIdx] + "\r\n";
@@ -335,7 +380,8 @@ class Vi {
         }
 
         // Status bar
-        const status = this.mode === Mode.COMMAND ? this.commandBuffer : this.message;
+        const status =
+            this.mode === Mode.COMMAND ? this.commandBuffer : this.message;
         const fileInfo = this.filePath || "[No Name]";
         const posInfo = `${this.cursorY + 1},${this.cursorX + 1}`;
 
@@ -350,7 +396,7 @@ class Vi {
         const padding = Math.max(0, this.cols - statusBar.length);
         buffer += "\x1b[7m" + statusBar + " ".repeat(padding) + "\x1b[0m";
 
-        // Move cursor 
+        // Move cursor
         const visualY = this.cursorY - this.offsetY + 1;
         const visualX = this.cursorX + 1 + lineNumberWidth; // adjust for line numbers
         buffer += `\x1b[${visualY};${visualX}H`;
@@ -370,5 +416,5 @@ export const vi: Command = {
             });
             editor.start();
         });
-    },
+    }
 };
