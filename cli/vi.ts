@@ -33,16 +33,17 @@ class Vi {
         this.quitCallback = onQuit;
         this.rows = this.shell.terminal.rows - 1; // Reserve last line for status
         this.cols = this.shell.terminal.cols;
+        console.log(filePath, "icici");
 
         if (this.filePath) {
+            console.log(this.filePath);
             try {
-                const content = fs.readFileSync(
-                    path.resolve(process.cwd(), this.filePath),
-                    "utf-8"
-                );
+                const content = fs.readFileSync(this.filePath, "utf-8");
+                console.log(content);
                 this.lines = content.split("\n");
                 if (this.lines.length === 0) this.lines = [""];
             } catch (e) {
+                console.log(e);
                 this.message = "New File";
             }
         }
@@ -314,7 +315,7 @@ class Vi {
         } else if (cmd === "w" || cmd === "w!") {
             if (this.filePath) {
                 fs.writeFileSync(
-                    path.resolve(process.cwd(), this.filePath),
+                    path.resolve(this.filePath),
                     this.lines.join("\n")
                 );
                 this.message = `"${this.filePath}" written`;
@@ -325,7 +326,7 @@ class Vi {
         } else if (cmd === "wq" || cmd === "wq!") {
             if (this.filePath) {
                 fs.writeFileSync(
-                    path.resolve(process.cwd(), this.filePath),
+                    path.resolve(this.filePath),
                     this.lines.join("\n")
                 );
                 this.stop();
