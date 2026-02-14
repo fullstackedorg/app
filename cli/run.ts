@@ -18,6 +18,7 @@ export const run: Command = {
 
         try {
             await runFn(target);
+            (document.activeElement as HTMLElement)?.blur?.();
         } catch (e) {
             shell.writeln(`run: ${e.message}`);
             return 1;
