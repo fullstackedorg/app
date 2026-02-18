@@ -9,7 +9,7 @@ enum Mode {
     COMMAND
 }
 
-class Vi {
+export class Vi {
     shell: Shell;
     filePath: string | null = null;
     lines: string[] = [""];
@@ -230,6 +230,18 @@ class Vi {
                 this.lines[this.cursorY] += currLine;
                 this.isDirty = true;
             }
+            return;
+        }
+
+        if (key === "\t") {
+            const line = this.lines[this.cursorY];
+            const tabSpaces = "    ";
+            this.lines[this.cursorY] =
+                line.slice(0, this.cursorX) +
+                tabSpaces +
+                line.slice(this.cursorX);
+            this.cursorX += tabSpaces.length;
+            this.isDirty = true;
             return;
         }
 

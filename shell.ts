@@ -1,9 +1,9 @@
 import { Terminal } from "@xterm/xterm";
 import { commands, aliases } from "./cli";
-import path from "path";
-import { printInColumns } from "./utils/printInColumns";
-import fs from "fs";
+import { WebLinksAddon } from "@xterm/addon-web-links";
 import { gitLib } from "./cli/git";
+import { githubDeviceFlow } from "./utils/githubDeviceFlow";
+import { handleAutocomplete } from "./utils/autocomplete";
 
 const td = new TextDecoder();
 
@@ -18,12 +18,33 @@ export class Shell {
 
     constructor(terminal: Terminal) {
         this.terminal = terminal;
+        this.terminal.loadAddon(new WebLinksAddon());
         gitLib.createGitAuthManager().then((m) => {
             this.gitAuthManager = m;
             this.gitAuthManager.on("auth", async (host: string) => {
-                console.log(host);
-                const auth = await this.requestUsernamePassword(host);
-                this.gitAuthManager.writeEvent("authResponse", host, auth);
+                let auth;
+                if (host === "github.com") {
+                    this.writeln(
+                        `Authenticating with ${host} using Device Flow...`
+                    );
+                    // pass a writer function bound to this instance
+                    auth = await githubDeviceFlow((s) => this.write(s));
+                }
+
+                if (!auth) {
+                    auth = await this.requestUsernamePassword(host);
+                }
+
+                if (auth) {
+                    console.log(auth);
+                    this.gitAuthManager.writeEvent("authResponse", host, auth);
+                } else {
+                    this.writeln("Authentication failed or cancelled.");
+                    this.gitAuthManager.writeEvent("authResponse", host, {
+                        username: "",
+                        password: ""
+                    }); // Cancel/fail
+                }
             });
         });
     }
@@ -265,118 +286,14 @@ export class Shell {
     }
 
     async handleAutocomplete() {
-        const args = this.command.split(" ");
-        if (args.length === 1) {
-            const availableCommands = Object.keys(commands);
-            const matches = availableCommands.filter((c) =>
-                c.startsWith(this.command)
-            );
-
-            this.applyCompletion(matches, this.command);
-        } else {
-            const cmdName = args[0];
-            // Simple check if command supports file completion (for now assume ls, cat, cd, mkdir do)
-            if (
-                ["ls", "cat", "cd", "mkdir", "rm", "vi", "mv"].includes(cmdName)
-            ) {
-                const partialPath = args.at(-1) || "";
-                const isTrailingSlash = partialPath.endsWith("/");
-                const dir = isTrailingSlash
-                    ? partialPath
-                    : path.dirname(partialPath);
-                const base = partialPath
-                    ? isTrailingSlash
-                        ? ""
-                        : path.basename(partialPath)
-                    : "";
-
-                const searchDir = path.resolve(
-                    process.cwd(),
-                    dir === "." &&
-                        !partialPath.includes("/") &&
-                        partialPath !== "."
-                        ? "."
-                        : dir
-                );
-
-                const files = await fs.promises.readdir(searchDir);
-                const matches = files.filter((f) => f.startsWith(base));
-                if (matches.length > 0) {
-                    // Logic to find common prefix relative to base
-                    // We need to pass matches and the current partial segment to applyCompletion logic
-                    // But applyCompletion logic needs to check common prefix of matches.
-                    const commonPrefix = matches.reduce((prefix, current) => {
-                        let i = 0;
-                        while (
-                            i < prefix.length &&
-                            i < current.length &&
-                            prefix[i] === current[i]
-                        ) {
-                            i++;
-                        }
-                        return prefix.substring(0, i);
-                    }, matches[0]);
-
-                    if (matches.length === 1) {
-                        const match = matches[0];
-                        const matchPath = path.resolve(searchDir, match);
-                        try {
-                            const stats = await fs.promises.stat(matchPath);
-                            if (stats.isDirectory()) {
-                                const completion =
-                                    match.substring(base.length) + "/";
-                                this.command += completion;
-                                this.cursorPos += completion.length;
-                                this.terminal.write(completion);
-                                return;
-                            }
-                        } catch {}
-                    }
-
-                    if (commonPrefix.length > base.length && base.length > 0) {
-                        const completion = commonPrefix.substring(base.length);
-                        this.command += completion;
-                        this.cursorPos += completion.length;
-                        this.terminal.write(completion);
-                    } else if (matches.length > 0) {
-                        this.terminal.writeln("");
-                        printInColumns(this.terminal, matches);
-                        this.terminal.write(`${process.cwd()} $ `);
-                        this.terminal.write(this.command);
-                        this.cursorPos = this.command.length;
-                    }
-                }
+        await handleAutocomplete(
+            this.command,
+            this.terminal,
+            (newCommand, cursorPos) => {
+                this.command = newCommand;
+                this.cursorPos = cursorPos;
             }
-        }
-    }
-
-    applyCompletion(matches: string[], current: string) {
-        if (matches.length > 0) {
-            const commonPrefix = matches.reduce((prefix, curr) => {
-                let i = 0;
-                while (
-                    i < prefix.length &&
-                    i < curr.length &&
-                    prefix[i] === curr[i]
-                ) {
-                    i++;
-                }
-                return prefix.substring(0, i);
-            }, matches[0]);
-
-            if (commonPrefix.length > current.length) {
-                const completion = commonPrefix.substring(current.length);
-                this.command += completion;
-                this.cursorPos += completion.length;
-                this.terminal.write(completion);
-            } else if (matches.length > 1) {
-                this.terminal.writeln("");
-                printInColumns(this.terminal, matches);
-                this.terminal.write(`${process.cwd()} $ `);
-                this.terminal.write(this.command);
-                this.cursorPos = this.command.length;
-            }
-        }
+        );
     }
 
     private readInput(
@@ -408,6 +325,14 @@ export class Shell {
                             cursor--;
                             if (!hidden) this.terminal.write("\b \b");
                         }
+                        break;
+                    case "\x1b[A": // Up Arrow
+                    case "\x1b[B": // Down Arrow
+                        // Ignore for now in password/input prompt
+                        break;
+                    case "\x1b[D": // Left Arrow
+                    case "\x1b[C": // Right Arrow
+                        // Ignore for now
                         break;
                     default:
                         if (e >= " " && e <= "~") {

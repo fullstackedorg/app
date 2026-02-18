@@ -64,13 +64,10 @@ export async function runDuplex(
     shell: Shell
 ) {
     const duplex = await duplexPromise;
-    let lastByte: number = null;
     if (duplex && duplex[Symbol.asyncIterator]) {
         for await (const chunk of duplex) {
             shell.write(chunk);
-            lastByte = chunk.at(-1);
         }
-        return lastByte;
     } else {
         shell.writeln(JSON.stringify(duplex, null, 2));
     }

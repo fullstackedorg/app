@@ -5,6 +5,8 @@ import { parseArgs, getDirectory, runDuplex } from "./utils.ts";
 import { Command } from "./types";
 import type { Shell } from "../shell";
 import { green, red, yellow } from "../utils/colors";
+import fs from "fs";
+import path from "path";
 
 export const gitLib: typeof GitType = g;
 
@@ -150,17 +152,136 @@ export const git: Command = {
                         shell
                     );
                     break;
+                case "config":
+                    if (positionals.length < 2)
+                        throw new Error("Usage: git config <key> <value>");
+                    const key = positionals[0];
+                    const value = positionals[1];
+                    const keyParts = key.split(".");
+                    if (keyParts.length < 2)
+                        throw new Error("Invalid config key");
+                    const section = keyParts[0];
+                    const property = keyParts.slice(1).join(".");
+
+                    const configPath = path.resolve(directory, ".git/config");
+                    let configContent = "";
+                    if (fs.existsSync(configPath)) {
+                        configContent = fs.readFileSync(configPath, "utf-8");
+                    }
+
+                    const sectionRegex = new RegExp(
+                        `\\[${section}\\]([\\s\\S]*?)(\\[|$)`
+                    );
+                    const match = configContent.match(sectionRegex);
+
+                    if (match) {
+                        const sectionContent = match[1];
+                        const propertyRegex = new RegExp(
+                            `${property}\\s*=\\s*(.*)`
+                        );
+                        if (sectionContent.match(propertyRegex)) {
+                            configContent = configContent.replace(
+                                sectionRegex,
+                                (m, content, suffix) => {
+                                    return (
+                                        `[${section}]` +
+                                        content.replace(
+                                            propertyRegex,
+                                            `${property} = ${value}`
+                                        ) +
+                                        suffix
+                                    );
+                                }
+                            );
+                        } else {
+                            configContent = configContent.replace(
+                                sectionRegex,
+                                (m, content, suffix) => {
+                                    return (
+                                        `[${section}]${content.trimEnd()}\n\t${property} = ${value}\n` +
+                                        suffix
+                                    );
+                                }
+                            );
+                        }
+                    } else {
+                        configContent += `\n[${section}]\n\t${property} = ${value}\n`;
+                    }
+
+                    fs.writeFileSync(configPath, configContent);
+                    break;
                 case "commit":
+                    const flagsAm = flags["am"];
+                    const flagsM = flags["m"];
+                    const flagsMessage = flags["message"];
+
+                    const possibleMessage = flagsM || flagsMessage || flagsAm;
                     const message =
-                        (flags["m"] as string) || (flags["message"] as string);
-                    const authorName = flags["name"] as string;
-                    const authorEmail = flags["email"] as string;
+                        typeof possibleMessage === "string"
+                            ? possibleMessage
+                            : undefined;
+
+                    let authorName = flags["name"] as string;
+                    let authorEmail = flags["email"] as string;
+
+                    if (!authorName || !authorEmail) {
+                        try {
+                            const gitConfigPath = path.resolve(
+                                directory,
+                                ".git/config"
+                            );
+                            if (fs.existsSync(gitConfigPath)) {
+                                const configContent = fs.readFileSync(
+                                    gitConfigPath,
+                                    "utf-8"
+                                );
+                                const userSectionMatch = configContent.match(
+                                    /\[user\]([\s\S]*?)(\[|$)/
+                                );
+                                if (userSectionMatch) {
+                                    const userSection = userSectionMatch[1];
+                                    if (!authorName) {
+                                        const nameMatch =
+                                            userSection.match(
+                                                /name\s*=\s*(.*)/
+                                            );
+                                        if (nameMatch)
+                                            authorName = nameMatch[1].trim();
+                                    }
+                                    if (!authorEmail) {
+                                        const emailMatch =
+                                            userSection.match(
+                                                /email\s*=\s*(.*)/
+                                            );
+                                        if (emailMatch)
+                                            authorEmail = emailMatch[1].trim();
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            // ignore
+                        }
+                    }
+
+                    if (flags["a"] || flags["all"] || flags["am"]) {
+                        await gitLib.add(directory, ".");
+                    }
+
                     if (!message)
                         throw new Error("Usage: git commit -m <message>");
 
+                    if (!authorName || !authorEmail) {
+                        throw new Error(
+                            "Author identity unknown\n" +
+                                "*** Please tell me who you are.\n\n" +
+                                'Run\n\n  git config user.email "you@example.com"\n  git config user.name "Your Name"\n\n' +
+                                "to set your account's default identity."
+                        );
+                    }
+
                     const author = {
-                        name: authorName || "FullStacked User",
-                        email: authorEmail || "user@fullstacked.org"
+                        name: authorName,
+                        email: authorEmail
                     };
 
                     shell.writeln(
