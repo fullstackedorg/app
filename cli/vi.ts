@@ -33,13 +33,10 @@ export class Vi {
         this.quitCallback = onQuit;
         this.rows = this.shell.terminal.rows - 1; // Reserve last line for status
         this.cols = this.shell.terminal.cols;
-        console.log(filePath, "icici");
 
         if (this.filePath) {
-            console.log(this.filePath);
             try {
                 const content = fs.readFileSync(this.filePath, "utf-8");
-                console.log(content);
                 this.lines = content.split("\n");
                 if (this.lines.length === 0) this.lines = [""];
             } catch (e) {
@@ -199,7 +196,15 @@ export class Vi {
             return;
         }
 
-        if (key === "\r") {
+        // Handle paste or multiple characters (excluding the specific escape sequences above)
+        if (key.length > 1) {
+            for (const char of key) {
+                this.handleInsertInput(char);
+            }
+            return;
+        }
+
+        if (key === "\r" || key === "\n") {
             // Enter
             const rest = this.lines[this.cursorY].slice(this.cursorX);
             this.lines[this.cursorY] = this.lines[this.cursorY].slice(
