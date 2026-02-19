@@ -36,7 +36,6 @@ export class Shell {
                 }
 
                 if (auth) {
-                    console.log(auth);
                     this.gitAuthManager.writeEvent("authResponse", host, auth);
                 } else {
                     this.writeln("Authentication failed or cancelled.");

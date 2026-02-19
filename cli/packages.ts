@@ -124,8 +124,9 @@ export const packages: Command = {
 
                     if (doneEvent) {
                         const duration = Date.now() - startTime;
+                        const count = doneEvent.progress || 0;
                         shell.writeln(
-                            `Installed ${doneEvent.progress} packages in ${prettyMs(duration)}`
+                            `Installed ${count} package${count > 1 ? "s" : ""} in ${prettyMs(duration)}`
                         );
                         lastLineCount = 0;
                         return;
