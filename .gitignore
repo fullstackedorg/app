@@ -1,3 +1,5 @@
 _index.ts.js
 _index.ts.css
 node_modules
+*.wasm
+tailwindcss

@@ -21,7 +21,7 @@ export const exec: Command = {
             result.Errors.forEach((e) => shell.writeln(formatMessage(e)));
         } else {
             const worker = new Worker(result.OutputFiles.at(0));
-            onCancel(worker.terminate);
+            onCancel(worker.terminate.bind(worker));
             return new Promise((res) => {
                 worker.once("exit", res);
             });

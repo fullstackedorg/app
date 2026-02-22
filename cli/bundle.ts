@@ -3,6 +3,7 @@ import b from "bundle";
 import type BundleType from "../../core/internal/bundle/lib/bundle";
 import { Command } from "./types";
 import { Shell } from "../shell";
+import { init, build } from "@fullstacked/builder-tailwindcss";
 
 export const bundleLib: typeof BundleType = b;
 
@@ -21,6 +22,12 @@ export function formatMessage(msg: any): string {
     return JSON.stringify(msg, null, 2).replace(/\n/g, "\r\n");
 }
 
+let tailwindcssBuilder: Awaited<
+    ReturnType<typeof bundleLib.builderTailwindCSS>
+>;
+const removeCurrentWorkingDir = (p: string) =>
+    `/${p}`.replace(process.cwd() + "/", "");
+
 export const bundle: Command = {
     name: "bundle",
     description: "Bundle the project",
@@ -29,6 +36,26 @@ export const bundle: Command = {
         shell: Shell,
         onCancel: (handler: () => void) => void
     ) => {
+        if (!tailwindcssBuilder) {
+            tailwindcssBuilder = await bundleLib.builderTailwindCSS();
+            tailwindcssBuilder.on(
+                "build",
+                async (entryfile, outfile, ...sources) => {
+                    await init({
+                        lightningcss: "build:/lightningcss_node.wasm",
+                        oxide: "build:/oxide_wasm_bg.wasm",
+                        tailwindcss: "build://tailwindcss"
+                    });
+                    entryfile = removeCurrentWorkingDir(entryfile);
+                    outfile = removeCurrentWorkingDir(outfile);
+                    sources = sources.map(removeCurrentWorkingDir);
+                    console.log(entryfile, outfile, sources);
+                    await build(entryfile, outfile, sources);
+                    tailwindcssBuilder.writeEvent("build-done");
+                }
+            );
+        }
+
         const target = args[0] || ".";
         const result = await bundleLib.bundle(target);
         result.Warnings?.forEach((w) => shell.writeln(formatMessage(w)));
