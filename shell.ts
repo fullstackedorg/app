@@ -353,7 +353,8 @@ export class Shell {
     }
 
     async requestUsernamePassword(
-        resource?: string
+        resource?: string,
+        username?: string
     ): Promise<{ username: string; password: string } | null> {
         try {
             const usernamePrompt = resource
@@ -362,7 +363,11 @@ export class Shell {
             const passwordPrompt = resource
                 ? `Password for '${resource}': `
                 : "Password: ";
-            const username = await this.readInput(usernamePrompt);
+
+            if (!username) {
+                username = await this.readInput(usernamePrompt);
+            }
+
             const password = await this.readInput(passwordPrompt, true);
             return { username, password };
         } catch (e) {
