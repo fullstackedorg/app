@@ -2,7 +2,7 @@
     "name": "app",
     "version": "1.0.0",
     "scripts": {
-        "prestart": "node --experimental-strip-types ./wasm.ts",
+        "prestart": "node --experimental-strip-types ./prestart.ts",
         "start": "fullstacked"
     },
     "dependencies": {

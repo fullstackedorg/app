@@ -44,12 +44,11 @@ export const bundle: Command = {
                     await init({
                         lightningcss: "build:/lightningcss_node.wasm",
                         oxide: "build:/oxide_wasm_bg.wasm",
-                        tailwindcss: "build://tailwindcss"
+                        tailwindcss: "build:/tailwindcss"
                     });
                     entryfile = removeCurrentWorkingDir(entryfile);
                     outfile = removeCurrentWorkingDir(outfile);
                     sources = sources.map(removeCurrentWorkingDir);
-                    console.log(entryfile, outfile, sources);
                     await build(entryfile, outfile, sources);
                     tailwindcssBuilder.writeEvent("build-done");
                 }

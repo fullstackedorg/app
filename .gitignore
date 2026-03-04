@@ -1,4 +1,4 @@
 node_modules
-*.wasm
-tailwindcss
 out
+data.json
+index.ts
