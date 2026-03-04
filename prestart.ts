@@ -15,7 +15,7 @@ try {
 
 await Promise.all([
     fs.promises.cp(
-        "node_modules/@esm.sh/oxide-wasm/pkg/oxide_wasm_bg.wasm",
+        "node_modules/oxide-wasm/pkg/oxide_wasm_bg.wasm",
         "out/oxide_wasm_bg.wasm"
     ),
     fs.promises.cp(
