@@ -2,3 +2,4 @@ node_modules
 out
 data.json
 index.ts
+.skip-welcome
