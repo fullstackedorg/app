@@ -1,6 +1,4 @@
-_index.ts.js
-_index.ts.css
-_wasm.ts.js
 node_modules
 *.wasm
 tailwindcss
+out
