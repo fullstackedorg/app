@@ -1,10 +1,16 @@
 import fs from "fs";
 
+const copyIndexTS = (file: string) => fs.promises.cp(file, "index.ts");
+
 try {
     await fs.promises.stat("demo");
-    await fs.promises.cp("index-with-demo.ts", "index.ts");
+    if ((await fs.promises.readdir("demo")).length > 0) {
+        await copyIndexTS("index-with-demo.ts")
+    } else {
+        await copyIndexTS("index-no-demo.ts")
+    }
 } catch (e) {
-    await fs.promises.cp("index-no-demo.ts", "index.ts");
+    await copyIndexTS("index-no-demo.ts")
 }
 
 await Promise.all([
