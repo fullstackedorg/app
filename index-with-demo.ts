@@ -1,3 +1,4 @@
+import "./sentry";
 import fs from "fs";
 
 const skipFile = ".skip-welcome";
