@@ -1,9 +1,14 @@
 import { Terminal } from "@xterm/xterm";
 import { commands, aliases } from "./cli";
+import { getConfig } from "./cli/config";
 import { WebLinksAddon } from "@xterm/addon-web-links";
 import { gitLib } from "./cli/git";
 import { githubDeviceFlow } from "./utils/githubDeviceFlow";
 import { handleAutocomplete } from "./utils/autocomplete";
+import fs from "fs";
+import path from "path";
+
+const HISTORY_FILE = path.join(process.cwd(), ".history");
 
 const td = new TextDecoder();
 
@@ -19,6 +24,8 @@ export class Shell {
     constructor(terminal: Terminal) {
         this.terminal = terminal;
         this.terminal.loadAddon(new WebLinksAddon());
+        this.loadHistory();
+        this.runInitScript();
         gitLib.createGitAuthManager().then((m) => {
             this.gitAuthManager = m;
             this.gitAuthManager.on("auth", async (host: string) => {
@@ -109,6 +116,7 @@ export class Shell {
                 if (this.command.trim()) {
                     this.history.push(this.command);
                     this.historyIndex = this.history.length;
+                    this.saveHistory();
                 }
                 this.executeCommand(this.command);
                 this.command = "";
@@ -207,6 +215,43 @@ export class Shell {
                     this.cursorPos += e.length;
                     this.redrawInput();
                 }
+        }
+    }
+
+    private async runInitScript() {
+        try {
+            const initScript = await getConfig("initScript");
+            if (initScript && typeof initScript === "string") {
+                await this.executeCommand(initScript);
+            }
+        } catch (e) {
+            // Silently fail if initScript cannot be run
+        }
+    }
+
+    private async loadHistory() {
+        try {
+            if (fs.existsSync(HISTORY_FILE)) {
+                const content = await fs.promises.readFile(
+                    HISTORY_FILE,
+                    "utf-8"
+                );
+                this.history = content
+                    .split("\n")
+                    .filter((line) => line.trim() !== "");
+                this.historyIndex = this.history.length;
+            }
+        } catch (e) {
+            // Silently fail if history cannot be loaded
+        }
+    }
+
+    private async saveHistory() {
+        try {
+            const content = this.history.join("\n");
+            await fs.promises.writeFile(HISTORY_FILE, content, "utf-8");
+        } catch (e) {
+            // Silently fail if history cannot be saved
         }
     }
 

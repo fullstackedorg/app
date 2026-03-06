@@ -1,40 +1,29 @@
 import "./sentry";
-import fs from "fs";
+import { getConfig, setConfig } from "./cli/config";
 
-const skipFile = ".skip-welcome";
-
-const saveLastSeen = (skipWelcomeForever: boolean) => {
-    const cachedLastSeen = skipWelcomeForever
+const saveSkipWelcomeUntil = (dontShowAgain: boolean) => {
+    const until = dontShowAgain
         ? Number.MAX_SAFE_INTEGER
-        : Date.now();
+        : Date.now() + 1000 * 60 * 60 * 24; // 24h
 
-    fs.promises.writeFile(skipFile, cachedLastSeen.toString());
+    setConfig("skipWelcomeUntil", until);
 };
 
 const openTerminal = async () => {
     await import("./terminal");
 };
 
-const getLastSeen = async () => {
-    try {
-        return parseInt(
-            await fs.promises.readFile(skipFile, { encoding: "utf-8" })
-        );
-    } catch (e) {
-        return 0;
-    }
+const getSkipWelcomeUntil = async () => {
+    const until = await getConfig("skipWelcomeUntil");
+    return until ? parseInt(until) : 0;
 };
 
-if (Date.now() - (await getLastSeen()) < 1000 * 60 * 24) {
-    // 24h
+if (Date.now() < (await getSkipWelcomeUntil())) {
     openTerminal();
 } else {
     const showWelcomeMessage = (await import("./demo/init")).default;
     showWelcomeMessage((dontShowAgain) => {
         openTerminal();
-        if (dontShowAgain) {
-            saveLastSeen(true);
-        }
+        saveSkipWelcomeUntil(dontShowAgain);
     });
-    saveLastSeen(false);
 }

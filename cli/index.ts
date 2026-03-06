@@ -14,6 +14,7 @@ import { npm } from "./npm";
 import { vi } from "./vi";
 import { mv } from "./mv";
 import { ssh } from "./ssh";
+import { config } from "./config";
 
 export const commands: Record<string, Command> = {
     ls,
@@ -30,7 +31,8 @@ export const commands: Record<string, Command> = {
     exec,
     npm,
     vi,
-    ssh
+    ssh,
+    config
 };
 
 export const aliases: Record<string, string> = {
