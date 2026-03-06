@@ -8,7 +8,6 @@ const sentryCore = await getConfig("sentryCore");
 const sentryApp = await getConfig("sentryApp");
 
 if (sentryCore) {
-    console.log("initing sentry")
     sentry.init(sentryCore, packageJson.version);
 }
 
