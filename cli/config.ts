@@ -24,7 +24,7 @@ async function acquireLock() {
 async function releaseLock() {
     try {
         await fs.promises.rm(LOCK_FILE, { recursive: true });
-    } catch (e) { }
+    } catch (e) {}
 }
 
 async function loadConfig(): Promise<Record<string, any>> {
@@ -137,14 +137,18 @@ export const config: Command = {
                     shell.writeln("Configuration is empty.");
                 } else {
                     for (const k of keys) {
-                        shell.writeln(`${k}: ${JSON.stringify(allConfig[k], null, 2)}`);
+                        shell.writeln(
+                            `${k}: ${JSON.stringify(allConfig[k], null, 2)}`
+                        );
                     }
                 }
                 break;
 
             default:
                 shell.writeln(`Unknown action: ${action}`);
-                shell.writeln("Usage: config <get|set|delete|list> [key] [value]");
+                shell.writeln(
+                    "Usage: config <get|set|delete|list> [key] [value]"
+                );
                 return 1;
         }
     }
