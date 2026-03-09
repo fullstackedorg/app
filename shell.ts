@@ -5,6 +5,7 @@ import { WebLinksAddon } from "@xterm/addon-web-links";
 import { gitLib } from "./cli/git";
 import { githubDeviceFlow } from "./utils/githubDeviceFlow";
 import { handleAutocomplete } from "./utils/autocomplete";
+import { setupUtilityButtons } from "./utils/utilityButtons";
 import fs from "fs";
 
 const HISTORY_FILE = "/.history";
@@ -20,6 +21,7 @@ export class Shell {
     historyIndex: number = 0;
     gitAuthManager: Awaited<ReturnType<typeof gitLib.createGitAuthManager>>;
     private inputHandler: ((e: string) => void) | null = null;
+    private _lastDrawnCursorPos = 0;
 
     constructor(terminal: Terminal) {
         this.terminal = terminal;
@@ -61,6 +63,12 @@ export class Shell {
                 }
             });
         });
+
+        this.setupTouchToolbar();
+    }
+
+    private setupTouchToolbar() {
+        setupUtilityButtons((char: string) => this.handleInput(char));
     }
 
     prompt() {
@@ -68,6 +76,7 @@ export class Shell {
             this.terminal.write("\r\n");
         }
         this.terminal.write(`${process.cwd()} $ `);
+        this._lastDrawnCursorPos = 0;
     }
 
     write(data: string | Uint8Array) {
@@ -86,15 +95,39 @@ export class Shell {
 
     redrawInput() {
         const promptStr = `${process.cwd()} $ `;
-        this.terminal.write("\r" + promptStr + this.command + "\x1b[K");
+        const cols = this.terminal.cols;
 
-        // Fix cursor position visual update
-        // We write the whole command, cursor is effectively at the end.
-        // We need to move it back to `cursorPos`.
-        const distance = this.command.length - this.cursorPos;
-        if (distance > 0) {
-            this.terminal.write(`\x1b[${distance}D`);
+        // Calculate old cursor physical row relative to prompt start
+        const oldAbsPos = promptStr.length + (this._lastDrawnCursorPos || 0);
+        const oldRow = Math.floor(oldAbsPos / cols);
+
+        let seq = "\r"; // Go to col 0
+        if (oldRow > 0) {
+            seq += `\x1b[${oldRow}A`; // Move up
         }
+        seq += "\x1b[J"; // Clear screen down from here
+
+        seq += promptStr + this.command; // Redraw entire command
+
+        // Calculate new actual end position and where we need to move the cursor to
+        const endAbsPos = promptStr.length + this.command.length;
+        const targetAbsPos = promptStr.length + this.cursorPos;
+
+        const endRow = Math.floor(endAbsPos / cols);
+        const targetRow = Math.floor(targetAbsPos / cols);
+        const targetCol = targetAbsPos % cols;
+
+        const rowsUp = endRow - targetRow;
+        seq += "\r";
+        if (rowsUp > 0) {
+            seq += `\x1b[${rowsUp}A`;
+        }
+        if (targetCol > 0) {
+            seq += `\x1b[${targetCol}C`;
+        }
+
+        this.terminal.write(seq);
+        this._lastDrawnCursorPos = this.cursorPos;
     }
 
     private currentCancelHandler: (() => void) | null = null;
