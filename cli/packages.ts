@@ -1,12 +1,8 @@
-// @ts-ignore
-import p from "packages";
-import type PackagesType from "../../core/internal/bundle/lib/packages/index.ts";
-import { parseArgs, getDirectory } from "./utils.ts";
+import packagesLib from "fullstacked/packages";
+import { parseArgs, getDirectory } from "./utils";
 import { Command } from "./types";
 import { Shell } from "../shell";
 import prettyMs from "pretty-ms";
-
-const packagesLib: typeof PackagesType = p;
 
 const BAR_WIDTH = 20;
 

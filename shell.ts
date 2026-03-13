@@ -2,14 +2,14 @@ import { Terminal } from "@xterm/xterm";
 import { commands, aliases } from "./cli";
 import { getConfig } from "./cli/config";
 import { WebLinksAddon } from "@xterm/addon-web-links";
-import { gitLib } from "./cli/git";
+import gitLib from "fullstacked/git";
 import { githubDeviceFlow } from "./utils/githubDeviceFlow";
 import { handleAutocomplete } from "./utils/autocomplete";
 import { setupUtilityButtons } from "./utils/utilityButtons";
 import fs from "fs";
 
-const HISTORY_FILE = "/.history";
-const GIT_CREDENTIALS_FILE = "/.git-credentials";
+const HISTORY_FILE = "/user_data/.history";
+const GIT_CREDENTIALS_FILE = "/user_data/.git-credentials";
 
 const td = new TextDecoder();
 
@@ -289,6 +289,7 @@ export class Shell {
 
     private async saveHistory() {
         try {
+            await fs.promises.mkdir("/user_data", { recursive: true });
             const content = this.history.join("\n");
             await fs.promises.writeFile(HISTORY_FILE, content, "utf-8");
         } catch (e) {
@@ -364,6 +365,10 @@ export class Shell {
             if (!updated) {
                 credentials.push(newCredential);
             }
+
+            try {
+                await fs.promises.mkdir("/user_data", { recursive: true });
+            } catch (e) {}
 
             await fs.promises.writeFile(
                 GIT_CREDENTIALS_FILE,

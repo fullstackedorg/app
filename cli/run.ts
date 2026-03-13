@@ -1,10 +1,6 @@
-// @ts-ignore
-import r from "run";
-import type RunType from "../../core/internal/bundle/lib/run";
+import runFn from "fullstacked/run";
 import { Shell } from "../shell";
 import { Command } from "./types";
-
-const runFn: typeof RunType = r;
 
 export const run: Command = {
     name: "run",

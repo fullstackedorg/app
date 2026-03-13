@@ -2,8 +2,9 @@ import { Command } from "./types";
 import { Shell } from "../shell";
 import path from "path";
 import fs from "fs";
-import { bundleLib, formatMessage } from "./bundle";
+import { formatMessage } from "./bundle";
 import { Worker } from "worker_threads";
+import bundleLib from "fullstacked/bundle";
 
 export const exec: Command = {
     name: "exec",

@@ -1,4 +1,3 @@
-import type { Duplex } from "../../core/internal/bundle/lib/bridge/duplex";
 import { Shell } from "../shell";
 
 export function parseArgs(args: string[]) {
@@ -60,7 +59,7 @@ export function getDirectory(flags: Record<string, string | boolean>) {
 }
 
 export async function runDuplex(
-    duplexPromise: Duplex | Promise<Duplex>,
+    duplexPromise: ReturnType<typeof import("fullstacked/git").clone>,
     shell: Shell
 ) {
     const duplex = await duplexPromise;

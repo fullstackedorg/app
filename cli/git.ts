@@ -1,14 +1,10 @@
-//@ts-ignore
-import g from "git";
-import type GitType from "../../core/internal/bundle/lib/git/index.ts";
-import { parseArgs, getDirectory, runDuplex } from "./utils.ts";
+import gitLib from "fullstacked/git";
+import { parseArgs, getDirectory, runDuplex } from "./utils";
 import { Command } from "./types";
 import type { Shell } from "../shell";
 import { green, red, yellow } from "../utils/colors";
 import fs from "fs";
 import path from "path";
-
-export const gitLib: typeof GitType = g;
 
 function formatStatus(status: any): string {
     const lines: string[] = [];
@@ -288,9 +284,9 @@ export const git: Command = {
                     if (!authorName || !authorEmail) {
                         throw new Error(
                             "Author identity unknown\n" +
-                                "*** Please tell me who you are.\n\n" +
-                                'Run\n\n  git config user.email "you@example.com"\n  git config user.name "Your Name"\n\n' +
-                                "to set your account's default identity."
+                            "*** Please tell me who you are.\n\n" +
+                            'Run\n\n  git config user.email "you@example.com"\n  git config user.name "Your Name"\n\n' +
+                            "to set your account's default identity."
                         );
                     }
 

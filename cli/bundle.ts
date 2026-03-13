@@ -1,11 +1,7 @@
-//@ts-ignore
-import b from "bundle";
-import type BundleType from "../../core/internal/bundle/lib/bundle";
+import bundleLib from "fullstacked/bundle";
 import { Command } from "./types";
 import { Shell } from "../shell";
 import { init, build } from "@fullstacked/builder-tailwindcss";
-
-export const bundleLib: typeof BundleType = b;
 
 export function formatMessage(msg: any): string {
     if (typeof msg === "string") return msg.replace(/\n/g, "\r\n");

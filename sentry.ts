@@ -1,7 +1,6 @@
 import * as Sentry from "@sentry/browser";
 import packageJson from "./package.json";
-// @ts-ignore
-import sentry from "sentry";
+import sentry from "fullstacked/sentry";
 import { getConfig } from "./cli/config";
 
 const sentryCore = await getConfig("sentryCore");
