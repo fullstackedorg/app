@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs";
 import { formatMessage } from "./bundle";
 import { Worker } from "worker_threads";
-import bundleLib from "fullstacked/bundle";
+import bundler from "fullstacked/bundle";
 
 export const exec: Command = {
     name: "exec",
@@ -18,7 +18,7 @@ export const exec: Command = {
         const file = args.at(0);
         const filePath = path.join(process.cwd(), file);
 
-        const result = await bundleLib.bundleFile(filePath);
+        const result = await bundler.bundleFile(filePath);
         result.Warnings?.forEach((w) => shell.writeln(formatMessage(w)));
         if (result.Errors?.length > 0) {
             result.Errors.forEach((e) => shell.writeln(formatMessage(e)));

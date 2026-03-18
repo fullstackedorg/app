@@ -1,4 +1,4 @@
-import bundleLib from "fullstacked/bundle";
+import bundler from "fullstacked/bundle";
 import { Command } from "./types";
 import { Shell } from "../shell";
 import { init, build } from "@fullstacked/builder-tailwindcss";
@@ -18,9 +18,7 @@ export function formatMessage(msg: any): string {
     return JSON.stringify(msg, null, 2).replace(/\n/g, "\r\n");
 }
 
-let tailwindcssBuilder: Awaited<
-    ReturnType<typeof bundleLib.builderTailwindCSS>
->;
+let tailwindcssBuilder: Awaited<ReturnType<typeof bundler.builderTailwindCSS>>;
 const removeCurrentWorkingDir = (p: string) =>
     `/${p}`.replace(process.cwd() + "/", "");
 
@@ -33,7 +31,7 @@ export const bundle: Command = {
         onCancel: (handler: () => void) => void
     ) => {
         if (!tailwindcssBuilder) {
-            tailwindcssBuilder = await bundleLib.builderTailwindCSS();
+            tailwindcssBuilder = await bundler.builderTailwindCSS();
             tailwindcssBuilder.on(
                 "build",
                 async (entryfile, outfile, ...sources) => {
@@ -52,7 +50,7 @@ export const bundle: Command = {
         }
 
         const target = args[0] || ".";
-        const result = await bundleLib.bundle(target);
+        const result = await bundler.bundle(target);
         result.Warnings?.forEach((w) => shell.writeln(formatMessage(w)));
         result.Errors?.forEach((e) => shell.writeln(formatMessage(e)));
 

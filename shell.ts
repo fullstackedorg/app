@@ -2,10 +2,11 @@ import { Terminal } from "@xterm/xterm";
 import { commands, aliases } from "./cli";
 import { getConfig } from "./cli/config";
 import { WebLinksAddon } from "@xterm/addon-web-links";
-import gitLib from "fullstacked/git";
+import git from "fullstacked/git";
 import { githubDeviceFlow } from "./utils/githubDeviceFlow";
 import { handleAutocomplete } from "./utils/autocomplete";
 import { setupUtilityButtons } from "./utils/utilityButtons";
+import { splitShellArgs } from "./utils/args";
 import fs from "fs";
 
 const HISTORY_FILE = "/user_data/.history";
@@ -19,7 +20,7 @@ export class Shell {
     cursorPos: number = 0;
     history: string[] = [];
     historyIndex: number = 0;
-    gitAuthManager: Awaited<ReturnType<typeof gitLib.createGitAuthManager>>;
+    gitAuthManager: Awaited<ReturnType<typeof git.createGitAuthManager>>;
     private inputHandler: ((e: string) => void) | null = null;
     private _lastDrawnCursorPos = 0;
 
@@ -28,7 +29,7 @@ export class Shell {
         this.terminal.loadAddon(new WebLinksAddon());
         this.loadHistory();
         this.runInitScript();
-        gitLib.createGitAuthManager().then((m) => {
+        git.createGitAuthManager().then((m) => {
             this.gitAuthManager = m;
             this.gitAuthManager.on("auth", async (host: string) => {
                 let auth = await this.getGitCredentials(host);
@@ -422,7 +423,7 @@ export class Shell {
                 continue;
             }
 
-            const args = cmd.split(" ");
+            const args = splitShellArgs(cmd);
             const commandName = args.shift();
 
             if (!commandName) {

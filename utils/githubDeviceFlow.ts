@@ -1,4 +1,3 @@
-// TODO: Replace with your actual GitHub Client ID
 const CLIENT_ID = "175231928f47d8d36b2d";
 
 export async function githubDeviceFlow(
