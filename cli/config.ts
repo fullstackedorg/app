@@ -1,9 +1,10 @@
 import { Command } from "./types";
 import { parseArgs } from "./utils";
 import fs from "fs";
+import path from "path";
 
-const CONFIG_FILE = "/user_data/.config";
-const LOCK_FILE = "/user_data/.config.lock";
+const CONFIG_FILE = path.join(path.sep, "user_data", ".config");
+const LOCK_FILE = path.join(path.sep, "user_data", ".config.lock");
 
 async function acquireLock() {
     const start = Date.now();
@@ -12,9 +13,6 @@ async function acquireLock() {
         try {
             await fs.promises.stat(LOCK_FILE);
         } catch (e) {
-            try {
-                await fs.promises.mkdir("/user_data", { recursive: true });
-            } catch (err) {}
             await fs.promises.mkdir(LOCK_FILE);
             return true;
         }
@@ -27,7 +25,7 @@ async function acquireLock() {
 async function releaseLock() {
     try {
         await fs.promises.rm(LOCK_FILE, { recursive: true });
-    } catch (e) {}
+    } catch (e) { }
 }
 
 async function loadConfig(): Promise<Record<string, any>> {
@@ -45,7 +43,7 @@ async function loadConfig(): Promise<Record<string, any>> {
 async function saveConfig(config: Record<string, any>) {
     try {
         await fs.promises.mkdir("/user_data", { recursive: true });
-    } catch (e) {}
+    } catch (e) { }
     await fs.promises.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2));
 }
 

@@ -8,9 +8,10 @@ import { handleAutocomplete } from "./utils/autocomplete";
 import { setupUtilityButtons } from "./utils/utilityButtons";
 import { splitShellArgs } from "./utils/args";
 import fs from "fs";
+import path from "path";
 
-const HISTORY_FILE = "/user_data/.history";
-const GIT_CREDENTIALS_FILE = "/user_data/.git-credentials";
+const HISTORY_FILE = path.join(path.sep, "user_data", ".history");
+const GIT_CREDENTIALS_FILE = path.join(path.sep, "user_data", ".git-credentials");
 
 const td = new TextDecoder();
 
@@ -290,7 +291,7 @@ export class Shell {
 
     private async saveHistory() {
         try {
-            await fs.promises.mkdir("/user_data", { recursive: true });
+            await fs.promises.mkdir(`${path.sep}user_data`, { recursive: true });
             const content = this.history.join("\n");
             await fs.promises.writeFile(HISTORY_FILE, content, "utf-8");
         } catch (e) {
