@@ -25,7 +25,7 @@ async function acquireLock() {
 async function releaseLock() {
     try {
         await fs.promises.rm(LOCK_FILE, { recursive: true });
-    } catch (e) {}
+    } catch (e) { }
 }
 
 async function loadConfig(): Promise<Record<string, any>> {
@@ -43,23 +43,23 @@ async function loadConfig(): Promise<Record<string, any>> {
 async function saveConfig(config: Record<string, any>) {
     try {
         await fs.promises.mkdir("/user_data", { recursive: true });
-    } catch (e) {}
+    } catch (e) { }
     await fs.promises.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2));
 }
 
-export async function getConfig(key?: string): Promise<any> {
+export async function getConfig(key?: string): Promise<string> {
     const config = await loadConfig();
-    if (!key) return config;
-    return config[key];
+    if (!key) return null;
+    return config?.[key]?.toString();
 }
 
-export async function setConfig(key: string, value: any): Promise<void> {
+export async function setConfig(key: string, value: string): Promise<void> {
     if (!(await acquireLock())) {
         throw new Error("Could not acquire lock for config file");
     }
     try {
         const latestConfig = await loadConfig();
-        latestConfig[key] = value;
+        latestConfig[key] = value.toString();
         await saveConfig(latestConfig);
     } finally {
         await releaseLock();

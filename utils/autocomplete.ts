@@ -67,18 +67,10 @@ export async function handleAutocomplete(
                         try {
                             const stats = await fs.promises.stat(matchPath);
                             const suffix = stats.isDirectory() ? "/" : "";
-                            // Strip the raw partial token and replace with escaped version
-                            const rawLastToken = rawArgs.at(-1) || "";
                             const escapedMatch = escapeSpaces(match) + suffix;
-                            const prefix = command.slice(
-                                0,
-                                command.length - rawLastToken.length
-                            );
                             const newCommand =
-                                prefix +
-                                (isTrailingSlash
-                                    ? escapeSpaces(match) + suffix
-                                    : escapedMatch);
+                                command +
+                                escapedMatch.slice(escapeSpaces(base).length);
                             updateCommand(newCommand, newCommand.length);
                             const completion = escapedMatch.substring(
                                 escapeSpaces(base).length
