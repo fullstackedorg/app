@@ -43,7 +43,7 @@ export const ssh: Command = {
             });
 
             const shellStream = await ssh.requestShell({
-                term: 'xterm-256color'
+                term: "xterm-256color"
             });
 
             onCancel(() => {

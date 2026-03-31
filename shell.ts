@@ -374,7 +374,7 @@ export class Shell {
 
             try {
                 await fs.promises.mkdir("/user_data", { recursive: true });
-            } catch (e) { }
+            } catch (e) {}
 
             await fs.promises.writeFile(
                 GIT_CREDENTIALS_FILE,
