@@ -42,24 +42,22 @@ export const ssh: Command = {
                 password
             });
 
-            const shellStream = await ssh.requestShell();
+            const shellStream = await ssh.requestShell({
+                term: 'xterm-256color'
+            });
 
             onCancel(() => {
                 shellStream.end();
                 ssh.dispose();
             });
 
-            shellStream.on("data", (data: Buffer) => {
-                shell.write(data.toString());
-            });
+            shellStream.on("data", shell.write.bind(shell));
 
             shellStream.on("error", (err: Error) => {
                 shell.writeln(`SSH Error: ${err.message}`);
             });
 
-            shell.captureInput((data) => {
-                shellStream.write(data);
-            });
+            shell.captureInput(shellStream.write.bind(shellStream));
 
             return new Promise<number>((resolve) => {
                 shellStream.on("close", () => {

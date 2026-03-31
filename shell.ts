@@ -86,9 +86,7 @@ export class Shell {
     }
 
     write(data: string | Uint8Array) {
-        if (typeof data === "string") {
-            this.terminal.write(data);
-        } else this.terminal.write(td.decode(data));
+        this.terminal.write(data);
     }
 
     writeln(data?: string) {
@@ -376,7 +374,7 @@ export class Shell {
 
             try {
                 await fs.promises.mkdir("/user_data", { recursive: true });
-            } catch (e) {}
+            } catch (e) { }
 
             await fs.promises.writeFile(
                 GIT_CREDENTIALS_FILE,
