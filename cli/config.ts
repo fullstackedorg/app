@@ -135,7 +135,7 @@ export const config: Command = {
                 break;
 
             case "list":
-                const allConfig = await getConfig();
+                const allConfig = await loadConfig();
                 const keys = Object.keys(allConfig);
                 if (keys.length === 0) {
                     shell.writeln("Configuration is empty.");
